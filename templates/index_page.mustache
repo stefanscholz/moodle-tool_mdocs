@@ -1,0 +1,86 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template tool_mdocs/index_page
+
+    Documentation Center landing page.
+
+    Example context (json):
+    {
+        "hasdocs": true,
+        "countlabel": "3 document(s)",
+        "lastindexed": "Last indexed: 1 January 2026",
+        "canmanage": true,
+        "rebuildurl": "https://example.com/admin/tool/mdocs/index.php",
+        "sesskey": "abc123",
+        "nodocsmessage": "No documentation was found.",
+        "components": [
+            {
+                "component": "mod_forum",
+                "displayname": "Forum",
+                "docs": [{"title": "Overview", "url": "https://example.com/view.php"}]
+            }
+        ]
+    }
+}}
+<div class="tool-mdocs-index">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+        <div class="text-muted">{{countlabel}} &middot; {{lastindexed}}</div>
+        {{#canmanage}}
+            <form method="post" action="{{rebuildurl}}" class="m-0">
+                <input type="hidden" name="rebuild" value="1">
+                <input type="hidden" name="sesskey" value="{{sesskey}}">
+                <button type="submit" class="btn btn-secondary">{{#str}}rebuildindex, tool_mdocs{{/str}}</button>
+            </form>
+        {{/canmanage}}
+    </div>
+
+    {{#hasdocs}}
+        <div class="tool-mdocs-search mb-4 position-relative">
+            <label class="sr-only" for="tool-mdocs-search-input">{{#str}}searchdocs, tool_mdocs{{/str}}</label>
+            <input type="text" class="form-control" id="tool-mdocs-search-input"
+                   placeholder="{{#str}}searchplaceholder, tool_mdocs{{/str}}" autocomplete="off">
+            <div id="tool-mdocs-search-results" class="list-group tool-mdocs-search-results" hidden></div>
+        </div>
+
+        <div class="row">
+            {{#components}}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h3 class="card-title h5 mb-1">{{displayname}}</h3>
+                            <p class="text-muted small mb-2">{{component}}</p>
+                            <ul class="list-unstyled mb-0">
+                                {{#docs}}
+                                    <li class="mb-1"><a href="{{url}}">{{title}}</a></li>
+                                {{/docs}}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            {{/components}}
+        </div>
+    {{/hasdocs}}
+    {{^hasdocs}}
+        <div class="alert alert-info">{{nodocsmessage}}</div>
+    {{/hasdocs}}
+</div>
+{{#js}}
+require(['tool_mdocs/search'], function(Search) {
+    Search.init('tool-mdocs-search-input', 'tool-mdocs-search-results');
+});
+{{/js}}

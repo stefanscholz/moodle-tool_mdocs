@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="admin/tool/mdocs/db" VERSION="20260712" COMMENT="Database schema for tool_mdocs (Documentation Center)."
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../../lib/xmldb/xmldb.xsd"
+>
+  <TABLES>
+    <TABLE NAME="tool_mdocs_index" COMMENT="Catalogue of discovered Markdown documents.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="docid" TYPE="char" LENGTH="40" NOTNULL="true" SEQUENCE="false" COMMENT="Stable id: sha1(component/relpath)."/>
+        <FIELD NAME="component" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="Frankenstyle component."/>
+        <FIELD NAME="plugintype" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false" COMMENT="Plugin type, e.g. mod, tool, core."/>
+        <FIELD NAME="relpath" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="Path relative to the component directory."/>
+        <FIELD NAME="basename" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="File basename."/>
+        <FIELD NAME="title" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="Derived document title."/>
+        <FIELD NAME="pagetypes" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Optional pagetype hints for contextual help."/>
+        <FIELD NAME="sortorder" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="filesize" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="File modification time."/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="When this row was indexed."/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="docid" UNIQUE="true" FIELDS="docid"/>
+        <INDEX NAME="component" UNIQUE="false" FIELDS="component"/>
+      </INDEXES>
+    </TABLE>
+  </TABLES>
+</XMLDB>
