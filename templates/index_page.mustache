@@ -48,13 +48,18 @@
 <div class="tool-mdocs-index">
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
         <div class="text-muted">{{countlabel}} &middot; {{lastindexed}}</div>
-        {{#canmanage}}
-            <form method="post" action="{{rebuildurl}}" class="m-0">
-                <input type="hidden" name="rebuild" value="1">
-                <input type="hidden" name="sesskey" value="{{sesskey}}">
-                <button type="submit" class="btn btn-secondary">{{#str}}rebuildindex, tool_mdocs{{/str}}</button>
-            </form>
-        {{/canmanage}}
+        <div class="d-flex align-items-center">
+            {{#canmanagepages}}
+                <a href="{{addpageurl}}" class="btn btn-primary mr-2">{{#str}}addpage, tool_mdocs{{/str}}</a>
+            {{/canmanagepages}}
+            {{#canmanage}}
+                <form method="post" action="{{rebuildurl}}" class="m-0">
+                    <input type="hidden" name="rebuild" value="1">
+                    <input type="hidden" name="sesskey" value="{{sesskey}}">
+                    <button type="submit" class="btn btn-secondary">{{#str}}rebuildindex, tool_mdocs{{/str}}</button>
+                </form>
+            {{/canmanage}}
+        </div>
     </div>
 
     {{#hasdocs}}
@@ -75,7 +80,14 @@
                             {{#hasdocs}}
                                 <ul class="list-unstyled mb-0">
                                     {{#docs}}
-                                        <li class="mb-1"><a href="{{url}}">{{title}}</a></li>
+                                        <li class="mb-1">
+                                            <a href="{{url}}">{{title}}</a>
+                                            {{#isdraft}}<span class="badge badge-secondary">{{draftbadge}}</span>{{/isdraft}}
+                                            {{#editurl}}
+                                                <a href="{{editurl}}" class="small ml-1">{{#str}}edit{{/str}}</a>
+                                                <a href="{{deleteurl}}" class="small text-danger ml-1">{{#str}}delete{{/str}}</a>
+                                            {{/editurl}}
+                                        </li>
                                     {{/docs}}
                                 </ul>
                             {{/hasdocs}}
@@ -84,7 +96,14 @@
                                     <h4 class="h6 text-muted mb-1">{{displayname}}</h4>
                                     <ul class="list-unstyled mb-0">
                                         {{#docs}}
-                                            <li class="mb-1"><a href="{{url}}">{{title}}</a></li>
+                                            <li class="mb-1">
+                                            <a href="{{url}}">{{title}}</a>
+                                            {{#isdraft}}<span class="badge badge-secondary">{{draftbadge}}</span>{{/isdraft}}
+                                            {{#editurl}}
+                                                <a href="{{editurl}}" class="small ml-1">{{#str}}edit{{/str}}</a>
+                                                <a href="{{deleteurl}}" class="small text-danger ml-1">{{#str}}delete{{/str}}</a>
+                                            {{/editurl}}
+                                        </li>
                                         {{/docs}}
                                     </ul>
                                 </div>

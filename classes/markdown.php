@@ -51,6 +51,40 @@ class markdown {
     }
 
     /**
+     * Render a user-authored page, resolving embedded @@PLUGINFILE@@ image references.
+     *
+     * Unlike file documents, page content is not resolved against a component directory,
+     * so the relative link/image rewriting is skipped; only anchors and the TOC are added.
+     *
+     * @param \stdClass $page a tool_mdocs_page record (id, content, contentformat, component, timemodified)
+     * @param \context $context context used for output cleaning and file URLs
+     * @return array{html: string, toc: array}
+     */
+    public static function render_page(\stdClass $page, \context $context): array {
+        $cache = \cache::make('tool_mdocs', 'rendered');
+        $key = 'page_' . $page->id . '_' . $page->timemodified;
+        $cached = $cache->get($key);
+        if ($cached !== false) {
+            return $cached;
+        }
+
+        $content = file_rewrite_pluginfile_urls(
+            $page->content,
+            'pluginfile.php',
+            $context->id,
+            'tool_mdocs',
+            page_manager::FILEAREA,
+            $page->id
+        );
+        $format = isset($page->contentformat) ? (int) $page->contentformat : FORMAT_MARKDOWN;
+        $html = format_text($content, $format, ['noclean' => false, 'context' => $context]);
+        $result = self::postprocess($html, (string) ($page->component ?? ''), '', false);
+
+        $cache->set($key, $result);
+        return $result;
+    }
+
+    /**
      * Convert raw Markdown to sanitised HTML with anchors, TOC and rewritten links.
      *
      * This is the disk-independent core of {@see self::render()} and is exposed for testing.
@@ -93,9 +127,11 @@ class markdown {
      * @param string $html sanitised HTML from format_text
      * @param string $component frankenstyle component the document belongs to
      * @param string $relpath component-relative path of the document
+     * @param bool $rewritelinks rewrite relative inter-doc links and images (file docs only)
      * @return array{html: string, toc: array}
      */
-    protected static function postprocess(string $html, string $component, string $relpath): array {
+    protected static function postprocess(string $html, string $component, string $relpath,
+            bool $rewritelinks = true): array {
         if (trim($html) === '') {
             return ['html' => '', 'toc' => []];
         }
@@ -114,8 +150,10 @@ class markdown {
         }
 
         $toc = self::add_anchors_and_toc($xpath, $root);
-        self::rewrite_links($xpath, $root, $component, $relpath);
-        self::rewrite_images($xpath, $root, $component, $relpath);
+        if ($rewritelinks) {
+            self::rewrite_links($xpath, $root, $component, $relpath);
+            self::rewrite_images($xpath, $root, $component, $relpath);
+        }
 
         return ['html' => self::inner_html($root), 'toc' => $toc];
     }

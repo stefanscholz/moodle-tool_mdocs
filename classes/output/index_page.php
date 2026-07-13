@@ -25,6 +25,7 @@
 namespace tool_mdocs\output;
 
 use tool_mdocs\index_manager;
+use tool_mdocs\page_manager;
 
 /**
  * Landing page: lists the components that ship documentation.
@@ -33,18 +34,28 @@ class index_page implements \renderable, \templatable {
     /** @var index_manager */
     protected index_manager $index;
 
+    /** @var page_manager */
+    protected page_manager $pages;
+
     /** @var bool Whether the current user can manage/rebuild. */
     protected bool $canmanage;
+
+    /** @var bool Whether the current user can create/edit pages. */
+    protected bool $canmanagepages;
 
     /**
      * Constructor.
      *
      * @param index_manager $index catalogue accessor
+     * @param page_manager $pages page accessor
      * @param bool $canmanage whether the current user may rebuild the index
+     * @param bool $canmanagepages whether the current user may create/edit pages
      */
-    public function __construct(index_manager $index, bool $canmanage) {
+    public function __construct(index_manager $index, page_manager $pages, bool $canmanage, bool $canmanagepages) {
         $this->index = $index;
+        $this->pages = $pages;
         $this->canmanage = $canmanage;
+        $this->canmanagepages = $canmanagepages;
     }
 
     /**
@@ -55,19 +66,24 @@ class index_page implements \renderable, \templatable {
      */
     public function export_for_template(\renderer_base $output): array {
         $records = $this->index->get_all();
-        $groups = nav_tree::build($records);
+        $pagerecords = $this->pages->get_pages($this->canmanagepages);
+        $groups = nav_tree::build($records, null, $pagerecords, null, $this->canmanagepages);
         $lastindexed = $this->index->get_last_indexed();
+        $total = count($records) + count($pagerecords);
 
         return [
             'hasdocs'        => !empty($groups),
             'components'     => $groups,
-            'documentcount' => count($records),
-            'countlabel'     => get_string('documentcount', 'tool_mdocs', count($records)),
+            'documentcount' => $total,
+            'countlabel'     => get_string('documentcount', 'tool_mdocs', $total),
             'nodocsmessage'  => get_string('nodocsfound_help', 'tool_mdocs'),
             'lastindexed'    => $lastindexed
                 ? get_string('lastindexed', 'tool_mdocs', userdate($lastindexed))
                 : get_string('neverindexed', 'tool_mdocs'),
             'canmanage'      => $this->canmanage,
+            'canmanagepages' => $this->canmanagepages,
+            'addpageurl'     => (new \moodle_url('/admin/tool/mdocs/edit.php'))->out(false),
+            'draftbadge'     => get_string('draftbadge', 'tool_mdocs'),
             'rebuildurl'     => (new \moodle_url('/admin/tool/mdocs/index.php'))->out(false),
             'sesskey'        => sesskey(),
             'searchurl'      => (new \moodle_url('/admin/tool/mdocs/index.php'))->out(false),

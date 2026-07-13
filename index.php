@@ -31,7 +31,9 @@ $context = context_system::instance();
 require_capability('tool/mdocs:view', $context);
 
 $manager = new \tool_mdocs\index_manager();
+$pagemanager = new \tool_mdocs\page_manager();
 $canmanage = has_capability('tool/mdocs:manage', $context);
+$canmanagepages = has_capability('tool/mdocs:managepages', $context);
 
 // Manual rebuild request.
 if ($canmanage && optional_param('rebuild', 0, PARAM_BOOL) && confirm_sesskey()) {
@@ -53,5 +55,5 @@ if ($manager->is_stale()) {
 $output = $PAGE->get_renderer('tool_mdocs');
 
 echo $OUTPUT->header();
-echo $output->render(new \tool_mdocs\output\index_page($manager, $canmanage));
+echo $output->render(new \tool_mdocs\output\index_page($manager, $pagemanager, $canmanage, $canmanagepages));
 echo $OUTPUT->footer();

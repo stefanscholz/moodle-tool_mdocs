@@ -30,6 +30,7 @@ use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
 use tool_mdocs\index_manager;
+use tool_mdocs\page_manager;
 use tool_mdocs\output\nav_tree;
 
 /**
@@ -60,8 +61,11 @@ class search_docs extends external_api {
         self::validate_context($context);
         require_capability('tool/mdocs:view', $context);
 
-        $manager = new index_manager();
+        $canmanagepages = has_capability('tool/mdocs:managepages', $context);
         $results = [];
+
+        // File-based documents.
+        $manager = new index_manager();
         foreach ($manager->search($params['query'], 30) as $record) {
             $url = new \moodle_url('/admin/tool/mdocs/view.php', [
                 'component' => $record->component,
@@ -74,8 +78,26 @@ class search_docs extends external_api {
                 'componentname' => nav_tree::component_name($record->component),
                 'url'           => $url->out(false),
                 'excerpt'       => $record->excerpt ?? '',
+                'source'        => 'file',
             ];
         }
+
+        // User-authored pages (drafts included only for managers).
+        $pagemanager = new page_manager();
+        foreach ($pagemanager->search_pages($params['query'], $canmanagepages, 30) as $record) {
+            $url = new \moodle_url('/admin/tool/mdocs/view.php', ['pageid' => $record->id]);
+            $componentname = empty($record->component)
+                ? get_string('sitedocumentation', 'tool_mdocs')
+                : nav_tree::component_name($record->component);
+            $results[] = [
+                'title'         => $record->title,
+                'componentname' => $componentname,
+                'url'           => $url->out(false),
+                'excerpt'       => shorten_text(trim(preg_replace('/\s+/', ' ', $record->content)), 150),
+                'source'        => 'page',
+            ];
+        }
+
         return ['results' => $results];
     }
 
@@ -88,12 +110,13 @@ class search_docs extends external_api {
         return new external_single_structure([
             'results' => new external_multiple_structure(
                 new external_single_structure([
-                    'docid'         => new external_value(PARAM_ALPHANUM, 'Document id'),
+                    'docid'         => new external_value(PARAM_ALPHANUM, 'Document id', VALUE_OPTIONAL),
                     'title'         => new external_value(PARAM_TEXT, 'Document title'),
-                    'component'     => new external_value(PARAM_COMPONENT, 'Component'),
+                    'component'     => new external_value(PARAM_COMPONENT, 'Component', VALUE_OPTIONAL),
                     'componentname' => new external_value(PARAM_TEXT, 'Human-readable component name'),
                     'url'           => new external_value(PARAM_URL, 'Viewer URL'),
                     'excerpt'       => new external_value(PARAM_TEXT, 'Plain-text content snippet', VALUE_OPTIONAL),
+                    'source'        => new external_value(PARAM_ALPHA, 'Result source: file or page'),
                 ])
             ),
         ]);
