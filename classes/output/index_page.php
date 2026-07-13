@@ -61,7 +61,6 @@ class index_page implements \renderable, \templatable {
         return [
             'hasdocs'        => !empty($groups),
             'components'     => $groups,
-            'documentcount' => count($records),
             'countlabel'     => get_string('documentcount', 'tool_mdocs', count($records)),
             'nodocsmessage'  => get_string('nodocsfound_help', 'tool_mdocs'),
             'lastindexed'    => $lastindexed

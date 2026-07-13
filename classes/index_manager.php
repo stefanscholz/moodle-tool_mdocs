@@ -31,6 +31,10 @@ class index_manager {
     /** @var string Database table name. */
     const TABLE = 'tool_mdocs_index';
 
+    /** @var string Every column except the bulky content body, which is only needed for searching. */
+    const METADATA_FIELDS = 'id, docid, component, plugintype, relpath, basename, title, pagetypes, sortorder, ' .
+        'filesize, timemodified, timecreated';
+
     /**
      * Rebuild the whole catalogue from a fresh filesystem scan.
      *
@@ -42,33 +46,48 @@ class index_manager {
         $discovery = new discovery();
         $documents = $discovery->discover();
 
-        $transaction = $DB->start_delegated_transaction();
-        $DB->delete_records(self::TABLE);
         $now = time();
+        $records = [];
         foreach ($documents as $doc) {
             $record = $doc->to_record();
             $record->timecreated = $now;
-            $DB->insert_record(self::TABLE, $record);
+            $records[] = $record;
+        }
+
+        $transaction = $DB->start_delegated_transaction();
+        $DB->delete_records(self::TABLE);
+        if (!empty($records)) {
+            // Insert in one batch: a site-wide scan can yield hundreds of rows.
+            $DB->insert_records(self::TABLE, $records);
         }
         $transaction->allow_commit();
 
         set_config('lastindexed', $now, 'tool_mdocs');
         set_config('lastversionshash', $CFG->allversionshash ?? '', 'tool_mdocs');
+        set_config('lastsettingshash', settings_helper::signature(), 'tool_mdocs');
 
         // Drop any stale rendered output.
         \cache_helper::purge_by_definition('tool_mdocs', 'rendered');
 
-        return count($documents);
+        return count($records);
     }
 
     /**
-     * Whether the index is stale relative to the current plugin set.
+     * Whether the index is stale and should be rebuilt.
+     *
+     * The catalogue depends both on the set of installed plugins and on the
+     * inclusion rules, so a change to either invalidates it. Without the latter
+     * check, changing which files are included would leave the Documentation
+     * Center showing the previous set until the next cron run.
      *
      * @return bool true when a rebuild is warranted
      */
     public function is_stale(): bool {
         global $CFG;
         if ($this->get_last_indexed() === 0) {
+            return true;
+        }
+        if ((string) get_config('tool_mdocs', 'lastsettingshash') !== settings_helper::signature()) {
             return true;
         }
         $stored = (string) get_config('tool_mdocs', 'lastversionshash');
@@ -97,23 +116,32 @@ class index_manager {
     /**
      * Fetch a single document record by its stable id.
      *
+     * The body is not loaded: it is only used for searching, and the viewer
+     * renders from the source file on disk.
+     *
      * @param string $docid
      * @return \stdClass|null
      */
     public function get_document(string $docid): ?\stdClass {
         global $DB;
-        $record = $DB->get_record(self::TABLE, ['docid' => $docid]);
+        $record = $DB->get_record(self::TABLE, ['docid' => $docid], self::METADATA_FIELDS);
         return $record ?: null;
     }
 
     /**
      * Fetch all documents, ordered for tree display.
      *
+     * The body is deliberately excluded: this runs on every page render just to
+     * build the navigation, and loading every document's text would pull
+     * megabytes out of the database to display a list of titles.
+     *
      * @return \stdClass[]
      */
     public function get_all(): array {
         global $DB;
-        return array_values($DB->get_records(self::TABLE, null, 'component ASC, sortorder ASC, title ASC'));
+        return array_values(
+            $DB->get_records(self::TABLE, null, 'component ASC, sortorder ASC, title ASC', self::METADATA_FIELDS)
+        );
     }
 
     /**
