@@ -94,6 +94,73 @@ final class index_manager_test extends \advanced_testcase {
     }
 
     /**
+     * Listings must not drag every document's body out of the database. They run
+     * on every page render and only need the metadata to build the navigation.
+     *
+     * @return void
+     */
+    public function test_listings_do_not_load_document_content(): void {
+        $this->resetAfterTest();
+        $this->insert('a1', 'mod_forum', 'Forum overview', 'A very long body that has no business being loaded.');
+
+        $manager = new index_manager();
+
+        $all = $manager->get_all();
+        $this->assertCount(1, $all);
+        $this->assertSame('Forum overview', reset($all)->title);
+        $this->assertFalse(property_exists(reset($all), 'content'));
+
+        $doc = $manager->get_document('a1');
+        $this->assertNotNull($doc);
+        $this->assertSame('Forum overview', $doc->title);
+        $this->assertFalse(property_exists($doc, 'content'));
+    }
+
+    /**
+     * Changing the inclusion rules must invalidate the catalogue, otherwise the
+     * Documentation Center keeps serving documents from the previous rules.
+     *
+     * @return void
+     */
+    public function test_index_is_stale_when_inclusion_settings_change(): void {
+        global $CFG;
+        $this->resetAfterTest();
+
+        $manager = new index_manager();
+
+        // Never built.
+        $this->assertTrue($manager->is_stale());
+
+        // Simulate a completed build under the current rules.
+        set_config('lastindexed', time(), 'tool_mdocs');
+        set_config('lastversionshash', (string) ($CFG->allversionshash ?? ''), 'tool_mdocs');
+        set_config('lastsettingshash', settings_helper::signature(), 'tool_mdocs');
+        $this->assertFalse($manager->is_stale());
+
+        // Any change to which files are included makes it stale again.
+        set_config('inclusionmode', settings_helper::MODE_FILENAMES, 'tool_mdocs');
+        $this->assertTrue($manager->is_stale());
+    }
+
+    /**
+     * A rebuild should record the rules it ran with, so it is not immediately
+     * considered stale again.
+     *
+     * @return void
+     */
+    public function test_rebuild_records_the_settings_it_used(): void {
+        $this->resetAfterTest();
+        set_config('inclusionmode', settings_helper::MODE_FILENAMES, 'tool_mdocs');
+        set_config('includefilenames', 'zzznotarealfile.md', 'tool_mdocs');
+
+        $manager = new index_manager();
+        $manager->rebuild();
+
+        $this->assertFalse($manager->is_stale());
+        $this->assertSame(settings_helper::signature(), get_config('tool_mdocs', 'lastsettingshash'));
+    }
+
+    /**
      * A title-only match should still return a (leading) excerpt without error.
      *
      * @return void

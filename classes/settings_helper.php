@@ -86,6 +86,25 @@ class settings_helper {
     }
 
     /**
+     * A fingerprint of every rule that decides which files get indexed.
+     *
+     * The catalogue is only valid for the rules it was built with, so this lets
+     * {@see \tool_mdocs\index_manager::is_stale()} notice a settings change and
+     * rebuild, instead of quietly serving the previous set of documents.
+     *
+     * @return string
+     */
+    public static function signature(): string {
+        return sha1(json_encode([
+            self::get_mode(),
+            self::get_folders(),
+            self::get_filenames(),
+            self::scan_core(),
+            self::get_max_filesize(),
+        ]));
+    }
+
+    /**
      * Split a textarea setting into a clean, lower-cased, de-duplicated list.
      *
      * @param string $raw the raw textarea value
