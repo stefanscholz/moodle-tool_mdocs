@@ -211,7 +211,7 @@ class discovery {
             $this->extract_title($raw, $filename),
             (int) $fileinfo->getMTime(),
             $filesize,
-            $this->to_plain_text($raw)
+            self::to_plain_text($raw)
         );
     }
 
@@ -238,7 +238,7 @@ class discovery {
      * @param string $raw raw Markdown source
      * @return string normalised plain text, truncated to the storage limit
      */
-    protected function to_plain_text(string $raw): string {
+    public static function to_plain_text(string $raw): string {
         // Keep the visible text of links and images, drop their URLs and syntax.
         $text = preg_replace('/!?\[([^\]]*)\]\([^)]*\)/', '$1', $raw);
         // Strip common Markdown punctuation, keeping words (including code) intact.

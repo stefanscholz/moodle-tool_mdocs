@@ -20,6 +20,9 @@ without leaving the site or digging through the filesystem.
   a scroll-spy table of contents, and a filter box.
 - **Full-text search** across document titles, components, paths *and document
   content*, with a snippet showing the match in context.
+- **User-authored pages** — managers can write their own Markdown documentation pages
+  directly in Moodle, either standalone (under a "Site documentation" section) or attached
+  to a specific plugin, with a draft/publish flag and embedded images.
 - **Secure asset serving** — images referenced from a document are served through a
   hardened endpoint (path-traversal defence, extension allowlist, capability check).
 - **Cached & indexed** — a database catalogue plus a rendered-output cache keep page
@@ -55,10 +58,19 @@ editing a Markdown file in place).
 
 - `tool/mdocs:view` — read the Documentation Center (granted to Manager by default).
 - `tool/mdocs:manage` — change settings and rebuild the index (Manager by default).
+- `tool/mdocs:managepages` — create, edit and delete documentation pages (Manager by default).
 
 ## Privacy
 
-The plugin stores no personal data; it only indexes files shipped inside plugins.
+Documentation read from inside plugins holds no personal data: it is files on
+disk, and nothing is recorded about who reads them.
+
+Pages authored in Moodle do, because each records who wrote it and who last
+edited it, and uploaded images record who uploaded them. The privacy provider
+declares this, exports a user's pages and images on request, and on erasure
+unlinks the author while keeping the page: the pages are the site's
+documentation, not the author's personal content, so the link to a person is
+removed rather than the documentation destroyed.
 
 ## Roadmap
 

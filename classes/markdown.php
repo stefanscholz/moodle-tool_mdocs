@@ -51,6 +51,45 @@ class markdown {
     }
 
     /**
+     * Render a user-authored page, resolving embedded @@PLUGINFILE@@ image references.
+     *
+     * Unlike file documents, page content is not resolved against a component directory,
+     * so the relative link/image rewriting is skipped; only anchors and the TOC are added.
+     *
+     * @param \stdClass $page a tool_mdocs_page record (id, content, contentformat, component, timemodified)
+     * @param \context $context context used for output cleaning and file URLs
+     * @return array{html: string, toc: array}
+     */
+    public static function render_page(\stdClass $page, \context $context): array {
+        global $CFG;
+
+        // Moodle's setup.php only loads filelib conditionally, so do not assume it is there.
+        require_once($CFG->libdir . '/filelib.php');
+
+        $cache = \cache::make('tool_mdocs', 'rendered');
+        $key = 'page_' . $page->id . '_' . $page->timemodified;
+        $cached = $cache->get($key);
+        if ($cached !== false) {
+            return $cached;
+        }
+
+        $content = file_rewrite_pluginfile_urls(
+            $page->content,
+            'pluginfile.php',
+            $context->id,
+            'tool_mdocs',
+            page_manager::FILEAREA,
+            $page->id
+        );
+        $format = isset($page->contentformat) ? (int) $page->contentformat : FORMAT_MARKDOWN;
+        $html = format_text($content, $format, ['noclean' => false, 'context' => $context]);
+        $result = self::postprocess($html, (string) ($page->component ?? ''), '', false);
+
+        $cache->set($key, $result);
+        return $result;
+    }
+
+    /**
      * Convert raw Markdown to sanitised HTML with anchors, TOC and rewritten links.
      *
      * This is the disk-independent core of {@see self::render()} and is exposed for testing.
@@ -64,6 +103,44 @@ class markdown {
     public static function process(string $raw, string $component, string $relpath, \context $context): array {
         $html = format_text($raw, FORMAT_MARKDOWN, ['noclean' => false, 'context' => $context]);
         return self::postprocess($html, $component, $relpath);
+    }
+
+    /**
+     * Render Markdown for the editor preview.
+     *
+     * This runs the same pipeline a saved page does — the same Markdown parser and
+     * the same output sanitiser — so the preview shows what will actually be
+     * published, rather than a lookalike produced by a second renderer in the
+     * browser. Relative links are not rewritten, because an unsaved page has no
+     * component directory to resolve them against.
+     *
+     * Images are resolved against the author's draft file area, so a picture that
+     * has been uploaded but not yet saved still shows up. Without this the
+     * pluginfile placeholder would reach format_text() untouched, which both
+     * renders a broken image and trips a debugging warning.
+     *
+     * @param string $content raw Markdown
+     * @param \context $context context used for output cleaning
+     * @param int $draftitemid the form's draft file area, 0 when there is none
+     * @return array{html: string, toc: array}
+     */
+    public static function preview(string $content, \context $context, int $draftitemid = 0): array {
+        global $CFG, $USER;
+
+        // Moodle's setup.php only loads filelib conditionally, so do not assume it is there.
+        require_once($CFG->libdir . '/filelib.php');
+
+        $content = file_rewrite_pluginfile_urls(
+            $content,
+            'draftfile.php',
+            \context_user::instance($USER->id)->id,
+            'user',
+            'draft',
+            $draftitemid
+        );
+
+        $html = format_text($content, FORMAT_MARKDOWN, ['noclean' => false, 'context' => $context]);
+        return self::postprocess($html, '', '', false);
     }
 
     /**
@@ -93,9 +170,15 @@ class markdown {
      * @param string $html sanitised HTML from format_text
      * @param string $component frankenstyle component the document belongs to
      * @param string $relpath component-relative path of the document
+     * @param bool $rewritelinks rewrite relative inter-doc links and images (file docs only)
      * @return array{html: string, toc: array}
      */
-    protected static function postprocess(string $html, string $component, string $relpath): array {
+    protected static function postprocess(
+        string $html,
+        string $component,
+        string $relpath,
+        bool $rewritelinks = true
+    ): array {
         if (trim($html) === '') {
             return ['html' => '', 'toc' => []];
         }
@@ -114,8 +197,10 @@ class markdown {
         }
 
         $toc = self::add_anchors_and_toc($xpath, $root);
-        self::rewrite_links($xpath, $root, $component, $relpath);
-        self::rewrite_images($xpath, $root, $component, $relpath);
+        if ($rewritelinks) {
+            self::rewrite_links($xpath, $root, $component, $relpath);
+            self::rewrite_images($xpath, $root, $component, $relpath);
+        }
 
         return ['html' => self::inner_html($root), 'toc' => $toc];
     }

@@ -138,3 +138,29 @@
 .tool-mdocs-markdown h2 {
     margin-top: 1.5rem;
 }
+
+/* Markdown editor: toolbar, tabs and preview pane. */
+.tool-mdocs-editor-toolbar .tool-mdocs-editor-btn {
+    min-width: 2.25rem;
+    line-height: 1.2;
+}
+
+.tool-mdocs-editor textarea {
+    font-family: var(--font-family-monospace, monospace);
+    font-size: 0.9rem;
+}
+
+.tool-mdocs-editor-preview {
+    padding: 0.75rem 1rem;
+    overflow-wrap: break-word;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 0.25rem;
+}
+
+.tool-mdocs-editor-preview > :first-child {
+    margin-top: 0;
+}
+
+.tool-mdocs-editor-preview > :last-child {
+    margin-bottom: 0;
+}

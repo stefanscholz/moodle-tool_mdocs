@@ -137,6 +137,30 @@ final class markdown_test extends \advanced_testcase {
     }
 
     /**
+     * A user page is rendered with anchors/TOC but no component-relative link rewriting.
+     *
+     * @return void
+     */
+    public function test_render_page_adds_anchors_but_skips_file_rewriting(): void {
+        $this->resetAfterTest();
+        $context = \context_system::instance();
+
+        $page = (object) [
+            'id' => 123,
+            'content' => "# Page title\n\nSee [x](foo.md).\n",
+            'contentformat' => FORMAT_MARKDOWN,
+            'component' => null,
+            'timemodified' => 1000,
+        ];
+        $result = markdown::render_page($page, $context);
+
+        $this->assertStringContainsString('id="page-title"', $result['html']);
+        $this->assertCount(1, $result['toc']);
+        // Page content is not resolved against a component dir, so relative links are left as-is.
+        $this->assertStringNotContainsString('view.php', $result['html']);
+    }
+
+    /**
      * Embedded scripts should be stripped by the output sanitiser.
      *
      * @return void

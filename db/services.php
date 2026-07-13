@@ -25,6 +25,13 @@
 defined('MOODLE_INTERNAL') || die();
 
 $functions = [
+    'tool_mdocs_preview_page' => [
+        'classname'   => 'tool_mdocs\external\preview_page',
+        'description' => 'Render Markdown for the page editor preview.',
+        'type'        => 'read',
+        'ajax'        => true,
+        'capabilities' => 'tool/mdocs:managepages',
+    ],
     'tool_mdocs_search_docs' => [
         'classname'   => 'tool_mdocs\external\search_docs',
         'description' => 'Search the documentation index by title, component or path.',
