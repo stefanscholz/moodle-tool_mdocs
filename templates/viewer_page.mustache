@@ -1,0 +1,94 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template tool_mdocs/viewer_page
+
+    Single-document viewer: sidebar tree and rendered content. The table of
+    contents is published separately as a fake block in the block drawer.
+
+    Example context (json):
+    {
+        "title": "Overview",
+        "indexurl": "https://example.com/admin/tool/mdocs/index.php",
+        "contenthtml": "<h1 id=\"overview\">Overview</h1><p>Hello.</p>",
+        "sourcelabel": "Source: mod_forum/readme.md",
+        "tree": [
+            {
+                "displayname": "Video Time",
+                "hasactive": true,
+                "docs": [{"title": "Overview", "url": "https://example.com/view.php", "active": true}],
+                "subgroups": [
+                    {
+                        "displayname": "Analysis",
+                        "docs": [{"title": "Admin guide", "url": "https://example.com/view.php", "active": false}]
+                    }
+                ]
+            }
+        ]
+    }
+}}
+<div class="tool-mdocs-viewer">
+    <div class="row">
+        <nav class="col-lg-3 tool-mdocs-sidebar mb-3" aria-label="{{#str}}documentationcenter, tool_mdocs{{/str}}">
+            <a href="{{indexurl}}" class="d-inline-block mb-2">&laquo; {{#str}}backtoindex, tool_mdocs{{/str}}</a>
+            <label class="sr-only" for="tool-mdocs-filter">{{#str}}filterplaceholder, tool_mdocs{{/str}}</label>
+            <input type="text" id="tool-mdocs-filter" class="form-control form-control-sm mb-2"
+                   data-region="mdocs-filter" placeholder="{{#str}}filterplaceholder, tool_mdocs{{/str}}" autocomplete="off">
+            <ul class="list-unstyled tool-mdocs-tree mb-0">
+                {{#tree}}
+                    <li class="tool-mdocs-tree-group {{#hasactive}}tool-mdocs-open{{/hasactive}}" data-region="mdocs-group">
+                        <button type="button" class="btn btn-link p-0 text-left tool-mdocs-group-toggle" data-action="toggle">
+                            {{displayname}}
+                        </button>
+                        <ul class="list-unstyled pl-3 tool-mdocs-tree-docs">
+                            {{#docs}}
+                                <li data-region="mdocs-doc">
+                                    <a href="{{url}}" class="{{#active}}font-weight-bold tool-mdocs-active{{/active}}">{{title}}</a>
+                                </li>
+                            {{/docs}}
+                            {{#subgroups}}
+                                <li class="tool-mdocs-tree-subgroup">
+                                    <span class="tool-mdocs-subgroup-title text-muted">{{displayname}}</span>
+                                    <ul class="list-unstyled pl-3">
+                                        {{#docs}}
+                                            <li data-region="mdocs-doc">
+                                                <a href="{{url}}" class="{{#active}}font-weight-bold tool-mdocs-active{{/active}}">{{title}}</a>
+                                            </li>
+                                        {{/docs}}
+                                    </ul>
+                                </li>
+                            {{/subgroups}}
+                        </ul>
+                    </li>
+                {{/tree}}
+            </ul>
+        </nav>
+
+        <main class="col-lg-9 tool-mdocs-content">
+            <div class="tool-mdocs-markdown">
+                {{{contenthtml}}}
+            </div>
+            <p class="text-muted small mt-4 mb-0">{{sourcelabel}}</p>
+        </main>
+    </div>
+</div>
+{{#js}}
+require(['tool_mdocs/sidebar', 'tool_mdocs/toc'], function(Sidebar, Toc) {
+    Sidebar.init();
+    Toc.init();
+});
+{{/js}}

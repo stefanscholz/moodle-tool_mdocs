@@ -1,0 +1,32 @@
+name: Moodle plugin CI
+
+on: [push, pull_request]
+
+# Supported range is Moodle 4.5 (LTS) to 5.2.
+#
+# 5.2 runs first as a canary: it is the newest supported release and catches
+# most breakage, so there is no point spending runner time on the rest until it
+# is green. 4.5 and 5.1 then run in parallel to prove the whole supported range.
+jobs:
+  canary:
+    name: Canary
+    uses: ./.github/workflows/plugin-ci.yml
+    with:
+      php: '8.3'
+      moodle-branch: 'MOODLE_502_STABLE'
+
+  compat:
+    name: Compat
+    needs: canary
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - php: '8.1'
+            moodle-branch: 'MOODLE_405_STABLE'
+          - php: '8.3'
+            moodle-branch: 'MOODLE_501_STABLE'
+    uses: ./.github/workflows/plugin-ci.yml
+    with:
+      php: ${{ matrix.php }}
+      moodle-branch: ${{ matrix.moodle-branch }}
