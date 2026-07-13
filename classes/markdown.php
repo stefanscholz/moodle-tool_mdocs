@@ -61,6 +61,11 @@ class markdown {
      * @return array{html: string, toc: array}
      */
     public static function render_page(\stdClass $page, \context $context): array {
+        global $CFG;
+
+        // Moodle's setup.php only loads filelib conditionally, so do not assume it is there.
+        require_once($CFG->libdir . '/filelib.php');
+
         $cache = \cache::make('tool_mdocs', 'rendered');
         $key = 'page_' . $page->id . '_' . $page->timemodified;
         $cached = $cache->get($key);
@@ -109,11 +114,31 @@ class markdown {
      * browser. Relative links are not rewritten, because an unsaved page has no
      * component directory to resolve them against.
      *
+     * Images are resolved against the author's draft file area, so a picture that
+     * has been uploaded but not yet saved still shows up. Without this the
+     * pluginfile placeholder would reach format_text() untouched, which both
+     * renders a broken image and trips a debugging warning.
+     *
      * @param string $content raw Markdown
      * @param \context $context context used for output cleaning
+     * @param int $draftitemid the form's draft file area, 0 when there is none
      * @return array{html: string, toc: array}
      */
-    public static function preview(string $content, \context $context): array {
+    public static function preview(string $content, \context $context, int $draftitemid = 0): array {
+        global $CFG, $USER;
+
+        // Moodle's setup.php only loads filelib conditionally, so do not assume it is there.
+        require_once($CFG->libdir . '/filelib.php');
+
+        $content = file_rewrite_pluginfile_urls(
+            $content,
+            'draftfile.php',
+            \context_user::instance($USER->id)->id,
+            'user',
+            'draft',
+            $draftitemid
+        );
+
         $html = format_text($content, FORMAT_MARKDOWN, ['noclean' => false, 'context' => $context]);
         return self::postprocess($html, '', '', false);
     }

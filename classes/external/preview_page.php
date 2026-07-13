@@ -42,23 +42,31 @@ class preview_page extends external_api {
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'content' => new external_value(PARAM_RAW, 'Raw Markdown to render'),
+            'draftitemid' => new external_value(PARAM_INT, 'Draft file area holding the images', VALUE_DEFAULT, 0),
         ]);
     }
 
     /**
      * Render the Markdown.
      *
+     * The draft area is the caller's own: images are resolved against the user
+     * making the request, so a preview can never surface another user's files.
+     *
      * @param string $content raw Markdown
+     * @param int $draftitemid the form's draft file area, 0 when there is none
      * @return array
      */
-    public static function execute(string $content): array {
-        $params = self::validate_parameters(self::execute_parameters(), ['content' => $content]);
+    public static function execute(string $content, int $draftitemid = 0): array {
+        $params = self::validate_parameters(self::execute_parameters(), [
+            'content' => $content,
+            'draftitemid' => $draftitemid,
+        ]);
 
         $context = \context_system::instance();
         self::validate_context($context);
         require_capability('tool/mdocs:managepages', $context);
 
-        $rendered = markdown::preview($params['content'], $context);
+        $rendered = markdown::preview($params['content'], $context, $params['draftitemid']);
 
         return ['html' => $rendered['html']];
     }
