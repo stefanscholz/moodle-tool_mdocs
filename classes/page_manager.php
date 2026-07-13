@@ -35,8 +35,12 @@ class page_manager {
     /** @var string File area for images embedded in a page. */
     const FILEAREA = 'content';
 
+    /** @var string Every column except the page body, which listings never display. */
+    const METADATA_FIELDS = 'id, title, contentformat, component, visible, sortorder, ' .
+        'usercreated, usermodified, timecreated, timemodified';
+
     /**
-     * Fetch a single page by id.
+     * Fetch a single page by id, body included: this is what the viewer renders.
      *
      * @param int $id
      * @return \stdClass|null
@@ -49,6 +53,11 @@ class page_manager {
 
     /**
      * Fetch pages, optionally including drafts and/or limited to one component.
+     *
+     * The body is deliberately excluded. This runs on every page render to build
+     * the navigation, which only shows titles, so loading the Markdown of every
+     * page would pull the whole site's documentation out of the database to draw
+     * a list of links.
      *
      * @param bool $includehidden include draft (non-visible) pages
      * @param string|null $component restrict to this component (use '' for standalone)
@@ -65,7 +74,9 @@ class page_manager {
             $conditions['component'] = ($component === '') ? null : $component;
         }
 
-        return array_values($DB->get_records(self::TABLE, $conditions, 'sortorder ASC, title ASC'));
+        return array_values(
+            $DB->get_records(self::TABLE, $conditions, 'sortorder ASC, title ASC', self::METADATA_FIELDS)
+        );
     }
 
     /**

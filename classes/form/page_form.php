@@ -90,12 +90,17 @@ class page_form extends \moodleform {
         $options = ['' => get_string('standalone', 'tool_mdocs')];
 
         foreach (array_keys(\core_component::get_plugin_types()) as $type) {
-            foreach (\core_component::get_plugins_of_type($type) as $name => $unused) {
+            foreach (array_keys(\core_component::get_plugin_list($type)) as $name) {
                 $component = $type . '_' . $name;
                 $options[$component] = nav_tree::component_name($component) . ' (' . $component . ')';
             }
         }
 
-        return $options;
+        // Order the picker by what the reader sees, keeping "standalone" pinned first.
+        $standalone = array_slice($options, 0, 1, true);
+        $plugins = array_slice($options, 1, null, true);
+        natcasesort($plugins);
+
+        return $standalone + $plugins;
     }
 }

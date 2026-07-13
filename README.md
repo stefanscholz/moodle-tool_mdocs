@@ -49,7 +49,10 @@ Under **Site administration ▸ Plugins ▸ Admin tools ▸ Documentation Center
 - **Include core subsystems** — also scan Moodle core, not just plugins.
 - **Maximum file size** — skip anything larger during indexing.
 
-After changing settings, use **Rebuild index** on the Documentation Center page.
+The index rebuilds itself whenever the inclusion rules or the set of installed
+plugins change, so a settings change takes effect on the next visit. **Rebuild
+index** on the Documentation Center page forces one on demand (for example after
+editing a Markdown file in place).
 
 ## Capabilities
 

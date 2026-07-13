@@ -29,6 +29,7 @@ use core_external\external_function_parameters;
 use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
+use tool_mdocs\discovery;
 use tool_mdocs\index_manager;
 use tool_mdocs\page_manager;
 use tool_mdocs\output\nav_tree;
@@ -89,11 +90,14 @@ class search_docs extends external_api {
             $componentname = empty($record->component)
                 ? get_string('sitedocumentation', 'tool_mdocs')
                 : nav_tree::component_name($record->component);
+            // Use the same normalisation and match-centred excerpt as file documents,
+            // so a hit deep in a page shows the matching text rather than its opening line.
+            $plain = discovery::to_plain_text((string) $record->content);
             $results[] = [
                 'title'         => $record->title,
                 'componentname' => $componentname,
                 'url'           => $url->out(false),
-                'excerpt'       => shorten_text(trim(preg_replace('/\s+/', ' ', $record->content)), 150),
+                'excerpt'       => index_manager::make_excerpt($plain, $params['query']),
                 'source'        => 'page',
             ];
         }
