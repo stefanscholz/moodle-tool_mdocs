@@ -24,12 +24,11 @@
 
 namespace tool_mdocs;
 
-use PHPUnit\Framework\Attributes\CoversClass;
-
 /**
  * Tests for {@see \tool_mdocs\index_manager}.
+ *
+ * @covers \tool_mdocs\index_manager
  */
-#[CoversClass(index_manager::class)]
 final class index_manager_test extends \advanced_testcase {
     /**
      * Insert a document row directly into the catalogue.

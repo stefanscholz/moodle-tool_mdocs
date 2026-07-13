@@ -24,12 +24,11 @@
 
 namespace tool_mdocs;
 
-use PHPUnit\Framework\Attributes\CoversClass;
-
 /**
  * Tests for {@see \tool_mdocs\markdown}.
+ *
+ * @covers \tool_mdocs\markdown
  */
-#[CoversClass(markdown::class)]
 final class markdown_test extends \advanced_testcase {
     /**
      * Headings should receive anchors and be collected into the table of contents.

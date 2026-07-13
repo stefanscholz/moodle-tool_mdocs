@@ -27,7 +27,7 @@ without leaving the site or digging through the filesystem.
 
 ## Requirements
 
-- Moodle 4.5 (LTS) or later, up to Moodle 5.x.
+- Moodle 4.5 (LTS) to 5.2. Continuously tested against 4.5, 5.1 and 5.2.
 - PHP 8.1+.
 
 ## Installation

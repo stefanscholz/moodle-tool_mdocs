@@ -24,12 +24,11 @@
 
 namespace tool_mdocs;
 
-use PHPUnit\Framework\Attributes\CoversClass;
-
 /**
  * Tests for {@see \tool_mdocs\discovery}.
+ *
+ * @covers \tool_mdocs\discovery
  */
-#[CoversClass(discovery::class)]
 final class discovery_test extends \advanced_testcase {
     /**
      * Absolute path to the sample plugin fixture.
