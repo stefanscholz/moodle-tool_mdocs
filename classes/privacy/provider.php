@@ -28,7 +28,6 @@ namespace tool_mdocs\privacy;
  * Privacy provider. This plugin stores no personal data.
  */
 class provider implements \core_privacy\local\metadata\null_provider {
-
     /**
      * Get the language string identifier explaining why this plugin stores no personal data.
      *

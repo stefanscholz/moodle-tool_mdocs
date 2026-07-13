@@ -28,7 +28,6 @@ namespace tool_mdocs;
  * Immutable description of one Markdown file that has been discovered.
  */
 class document {
-
     /** @var string Stable identifier: sha1(component . '/' . relpath). */
     public string $docid;
 
@@ -47,6 +46,9 @@ class document {
     /** @var string Human-readable title (first H1, or humanised filename). */
     public string $title;
 
+    /** @var string Plain-text body used for full-text search. */
+    public string $content;
+
     /** @var int File modification time. */
     public int $timemodified;
 
@@ -62,14 +64,23 @@ class document {
      * @param string $title document title
      * @param int $timemodified file mtime
      * @param int $filesize file size in bytes
+     * @param string $content plain-text body for full-text search
      */
-    public function __construct(string $component, string $plugintype, string $relpath,
-            string $title, int $timemodified, int $filesize) {
+    public function __construct(
+        string $component,
+        string $plugintype,
+        string $relpath,
+        string $title,
+        int $timemodified,
+        int $filesize,
+        string $content = ''
+    ) {
         $this->component = $component;
         $this->plugintype = $plugintype;
         $this->relpath = $relpath;
         $this->basename = basename($relpath);
         $this->title = $title;
+        $this->content = $content;
         $this->timemodified = $timemodified;
         $this->filesize = $filesize;
         $this->docid = self::make_docid($component, $relpath);
@@ -99,6 +110,7 @@ class document {
         $record->relpath = $this->relpath;
         $record->basename = $this->basename;
         $record->title = $this->title;
+        $record->content = $this->content;
         $record->pagetypes = null;
         $record->sortorder = 0;
         $record->filesize = $this->filesize;

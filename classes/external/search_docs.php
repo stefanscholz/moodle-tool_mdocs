@@ -36,7 +36,6 @@ use tool_mdocs\output\nav_tree;
  * Returns documents matching a search query for the viewer's search box.
  */
 class search_docs extends external_api {
-
     /**
      * Describe the parameters.
      *
@@ -74,6 +73,7 @@ class search_docs extends external_api {
                 'component'     => $record->component,
                 'componentname' => nav_tree::component_name($record->component),
                 'url'           => $url->out(false),
+                'excerpt'       => $record->excerpt ?? '',
             ];
         }
         return ['results' => $results];
@@ -93,6 +93,7 @@ class search_docs extends external_api {
                     'component'     => new external_value(PARAM_COMPONENT, 'Component'),
                     'componentname' => new external_value(PARAM_TEXT, 'Human-readable component name'),
                     'url'           => new external_value(PARAM_URL, 'Viewer URL'),
+                    'excerpt'       => new external_value(PARAM_TEXT, 'Plain-text content snippet', VALUE_OPTIONAL),
                 ])
             ),
         ]);

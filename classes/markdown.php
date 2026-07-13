@@ -28,7 +28,6 @@ namespace tool_mdocs;
  * Wraps Moodle's built-in Markdown renderer and post-processes the output.
  */
 class markdown {
-
     /**
      * Render a document, using the MUC cache when possible.
      *
@@ -133,7 +132,9 @@ class markdown {
         $used = [];
         $headings = $xpath->query('.//h1 | .//h2 | .//h3 | .//h4', $root);
         foreach ($headings as $heading) {
-            /** @var \DOMElement $heading */
+            if (!$heading instanceof \DOMElement) {
+                continue;
+            }
             $text = trim($heading->textContent);
             if ($text === '') {
                 continue;
@@ -166,9 +167,11 @@ class markdown {
         $basedir = self::dirname_rel($relpath);
         $discovery = new discovery();
         foreach ($xpath->query('.//a[@href]', $root) as $link) {
-            /** @var \DOMElement $link */
+            if (!$link instanceof \DOMElement) {
+                continue;
+            }
             $href = $link->getAttribute('href');
-            if ($href === '' || preg_match('#^(?:[a-z][a-z0-9+.-]*:|//|#)#i', $href)) {
+            if ($href === '' || preg_match('~^(?:[a-z][a-z0-9+.-]*:|//|#)~i', $href)) {
                 // Absolute URL, scheme, protocol-relative or in-page anchor: leave alone.
                 continue;
             }
@@ -204,7 +207,9 @@ class markdown {
     protected static function rewrite_images(\DOMXPath $xpath, \DOMElement $root, string $component, string $relpath): void {
         $basedir = self::dirname_rel($relpath);
         foreach ($xpath->query('.//img[@src]', $root) as $img) {
-            /** @var \DOMElement $img */
+            if (!$img instanceof \DOMElement) {
+                continue;
+            }
             $src = $img->getAttribute('src');
             if ($src === '' || preg_match('#^(?:[a-z][a-z0-9+.-]*:|//)#i', $src)) {
                 continue;
@@ -276,7 +281,7 @@ class markdown {
      * Produce a unique, URL-safe heading slug.
      *
      * @param string $text heading text
-     * @param array<string, bool> $used slugs already assigned (updated by reference)
+     * @param array $used slugs already assigned as keys (updated by reference)
      * @return string
      */
     protected static function unique_slug(string $text, array &$used): string {

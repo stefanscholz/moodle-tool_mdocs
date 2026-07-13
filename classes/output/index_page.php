@@ -30,7 +30,6 @@ use tool_mdocs\index_manager;
  * Landing page: lists the components that ship documentation.
  */
 class index_page implements \renderable, \templatable {
-
     /** @var index_manager */
     protected index_manager $index;
 

@@ -25,33 +25,31 @@
 namespace tool_mdocs\output;
 
 use tool_mdocs\index_manager;
-use tool_mdocs\markdown;
 
 /**
- * Viewer page: sidebar tree, rendered document and in-page table of contents.
+ * Viewer page: sidebar tree and the rendered document.
  */
 class viewer_page implements \renderable, \templatable {
-
     /** @var index_manager */
     protected index_manager $index;
 
     /** @var \stdClass The active document record. */
     protected \stdClass $doc;
 
-    /** @var \context Context used for output cleaning. */
-    protected \context $context;
+    /** @var array{html: string, toc: array} Pre-rendered document HTML and table of contents. */
+    protected array $rendered;
 
     /**
      * Constructor.
      *
      * @param index_manager $index catalogue accessor
      * @param \stdClass $doc the active tool_mdocs_index record
-     * @param \context $context context for output cleaning
+     * @param array $rendered pre-rendered document (html + toc) from {@see markdown::render()}
      */
-    public function __construct(index_manager $index, \stdClass $doc, \context $context) {
+    public function __construct(index_manager $index, \stdClass $doc, array $rendered) {
         $this->index = $index;
         $this->doc = $doc;
-        $this->context = $context;
+        $this->rendered = $rendered;
     }
 
     /**
@@ -61,28 +59,13 @@ class viewer_page implements \renderable, \templatable {
      * @return array
      */
     public function export_for_template(\renderer_base $output): array {
-        $rendered = markdown::render($this->doc, $this->context);
-
-        $toc = [];
-        foreach ($rendered['toc'] as $item) {
-            $toc[] = [
-                'text'   => $item['text'],
-                'id'     => $item['id'],
-                'level'  => $item['level'],
-                'indent' => 'tool-mdocs-toc-l' . $item['level'],
-            ];
-        }
-
         $tree = nav_tree::build($this->index->get_all(), $this->doc->docid);
 
         return [
             'title'         => $this->doc->title,
             'componentname' => nav_tree::component_name($this->doc->component),
             'component'     => $this->doc->component,
-            'contenthtml'   => $rendered['html'],
-            'toc'           => $toc,
-            'hastoc'        => !empty($toc),
-            'toclabel'      => get_string('tableofcontents', 'tool_mdocs'),
+            'contenthtml'   => $this->rendered['html'],
             'tree'          => $tree,
             'indexurl'      => (new \moodle_url('/admin/tool/mdocs/index.php'))->out(false),
             'sourcelabel'   => get_string('sourcepath', 'tool_mdocs', $this->doc->component . '/' . $this->doc->relpath),

@@ -24,13 +24,13 @@
 
 namespace tool_mdocs;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+
 /**
  * Tests for {@see \tool_mdocs\markdown}.
- *
- * @covers \tool_mdocs\markdown
  */
+#[CoversClass(markdown::class)]
 final class markdown_test extends \advanced_testcase {
-
     /**
      * Headings should receive anchors and be collected into the table of contents.
      *
@@ -117,6 +117,24 @@ final class markdown_test extends \advanced_testcase {
 
         // The reference escapes the component directory, so it must not become a viewer link.
         $this->assertStringNotContainsString('view.php', $result['html']);
+    }
+
+    /**
+     * In-page anchor links (href="#...") should be left untouched, not rewritten.
+     *
+     * @return void
+     */
+    public function test_inpage_anchor_links_are_left_untouched(): void {
+        $this->resetAfterTest();
+        $context = \context_system::instance();
+
+        $raw = "# Title\n\nJump to the [next section](#sub-section).\n\n## Sub section\n\nBody.\n";
+        $result = markdown::process($raw, 'mod_forum', 'readme.md', $context);
+
+        // The in-page anchor must survive and must not be turned into a viewer/file link.
+        $this->assertStringContainsString('href="#sub-section"', $result['html']);
+        $this->assertStringNotContainsString('view.php', $result['html']);
+        $this->assertStringNotContainsString('file.php', $result['html']);
     }
 
     /**

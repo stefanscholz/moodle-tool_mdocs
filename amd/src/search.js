@@ -56,7 +56,19 @@ const render = (container, items) => {
         const link = document.createElement('a');
         link.href = item.url;
         link.className = 'list-group-item list-group-item-action';
-        link.textContent = item.title + ' — ' + item.componentname;
+
+        const title = document.createElement('div');
+        title.className = 'tool-mdocs-result-title';
+        title.textContent = item.title + ' — ' + item.componentname;
+        link.appendChild(title);
+
+        if (item.excerpt) {
+            const excerpt = document.createElement('div');
+            excerpt.className = 'tool-mdocs-result-excerpt small text-muted';
+            excerpt.textContent = item.excerpt;
+            link.appendChild(excerpt);
+        }
+
         container.appendChild(link);
     });
     container.hidden = false;

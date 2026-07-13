@@ -24,59 +24,43 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['pluginname'] = 'Documentation Center';
-
-// Capabilities.
-$string['mdocs:view'] = 'View the Documentation Center';
-$string['mdocs:manage'] = 'Configure the Documentation Center and rebuild the index';
-
-// Navigation / pages.
+$string['backtoindex'] = 'All documentation';
+$string['browsedocs'] = 'Browse documentation';
+$string['coresubsystem'] = 'Core: {$a}';
 $string['documentationcenter'] = 'Documentation Center';
-$string['settings'] = 'Settings';
+$string['documentcount'] = '{$a} document(s)';
+$string['documentnotfound'] = 'The requested document could not be found. It may have been removed; try rebuilding the index.';
+$string['filterplaceholder'] = 'Filter…';
 $string['generalsettings'] = 'General settings';
-
-// Settings: inclusion rules.
-$string['inclusionmode'] = 'Which Markdown files to include';
-$string['inclusionmode_desc'] = 'Choose which Markdown (.md) files shipped inside plugins are picked up by the Documentation Center.';
-$string['inclusionmode_all'] = 'All Markdown files';
-$string['inclusionmode_folders'] = 'Only files inside specific folders';
-$string['inclusionmode_filenames'] = 'Only files with specific names';
-$string['includefolders'] = 'Included folders';
-$string['includefolders_desc'] = 'One folder name per line (for example <em>docs</em>). Used when the inclusion mode is "Only files inside specific folders". A file is included when any segment of its path relative to the plugin matches one of these names.';
 $string['includefilenames'] = 'Included file names';
 $string['includefilenames_desc'] = 'One file name per line (for example <em>readme.md</em>). Used when the inclusion mode is "Only files with specific names". Matching is case-insensitive.';
-$string['scancore'] = 'Include core subsystems';
-$string['scancore_desc'] = 'Also scan Moodle core subsystems (not just installed plugins) for documentation.';
+$string['includefolders'] = 'Included folders';
+$string['includefolders_desc'] = 'One folder name per line (for example <em>docs</em>). Used when the inclusion mode is "Only files inside specific folders". A file is included when any segment of its path relative to the plugin matches one of these names.';
+$string['inclusionmode'] = 'Which Markdown files to include';
+$string['inclusionmode_all'] = 'All Markdown files';
+$string['inclusionmode_desc'] = 'Choose which Markdown (.md) files shipped inside plugins are picked up by the Documentation Center.';
+$string['inclusionmode_filenames'] = 'Only files with specific names';
+$string['inclusionmode_folders'] = 'Only files inside specific folders';
+$string['invalidcomponent'] = 'Invalid or unknown component.';
+$string['lastindexed'] = 'Last indexed: {$a}';
 $string['maxfilesize'] = 'Maximum file size';
 $string['maxfilesize_desc'] = 'Markdown files larger than this are skipped during indexing.';
-
-// Index page.
+$string['mdocs:manage'] = 'Configure the Documentation Center and rebuild the index';
+$string['mdocs:view'] = 'View the Documentation Center';
+$string['neverindexed'] = 'The index has not been built yet.';
 $string['nodocsfound'] = 'No documentation was found.';
 $string['nodocsfound_help'] = 'No Markdown files matched your current inclusion rules. Check the settings, make sure your plugins ship documentation, then rebuild the index.';
+$string['noresults'] = 'No matching documents.';
+$string['pluginname'] = 'Documentation Center';
+$string['privacy:metadata'] = 'The Documentation Center plugin does not store any personal data. It only indexes documentation files shipped inside plugins.';
 $string['rebuildindex'] = 'Rebuild index';
 $string['rebuildqueued'] = 'A rebuild of the documentation index has been queued. It will run on the next cron cycle.';
 $string['rebuiltnow'] = 'The documentation index was rebuilt. {$a} document(s) indexed.';
-$string['lastindexed'] = 'Last indexed: {$a}';
-$string['neverindexed'] = 'The index has not been built yet.';
-$string['documentcount'] = '{$a} document(s)';
-$string['browsedocs'] = 'Browse documentation';
-$string['coresubsystem'] = 'Core: {$a}';
-
-// Viewer.
-$string['tableofcontents'] = 'On this page';
+$string['scancore'] = 'Include core subsystems';
+$string['scancore_desc'] = 'Also scan Moodle core subsystems (not just installed plugins) for documentation.';
 $string['searchdocs'] = 'Search documentation';
 $string['searchplaceholder'] = 'Search documentation…';
-$string['noresults'] = 'No matching documents.';
-$string['backtoindex'] = 'All documentation';
+$string['settings'] = 'Settings';
 $string['sourcepath'] = 'Source: {$a}';
-$string['documentnotfound'] = 'The requested document could not be found. It may have been removed; try rebuilding the index.';
-$string['filterplaceholder'] = 'Filter…';
-
-// Tasks.
+$string['tableofcontents'] = 'On this page';
 $string['task_rebuild_index'] = 'Rebuild the documentation index';
-
-// Privacy.
-$string['privacy:metadata'] = 'The Documentation Center plugin does not store any personal data. It only indexes documentation files shipped inside plugins.';
-
-// Errors.
-$string['invalidcomponent'] = 'Invalid or unknown component.';

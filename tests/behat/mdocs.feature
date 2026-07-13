@@ -15,7 +15,7 @@ Feature: Browse plugin documentation in the Documentation Center
     When I navigate to "Documentation Center > Browse documentation" in site administration
     Then I should see "document(s)"
     And I should see "Documentation Center"
-    When I follow "Documentation Center"
+    When I follow "Documentation Center (tool_mdocs)"
     Then I should see "Markdown documentation shipped"
     And I should see "On this page"
 

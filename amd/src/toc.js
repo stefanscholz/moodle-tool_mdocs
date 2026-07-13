@@ -16,6 +16,9 @@
 /**
  * Table of contents scroll-spy for the document viewer.
  *
+ * The table of contents is rendered as a fake block in the block drawer; this
+ * highlights the entry for the heading currently in view.
+ *
  * @module     tool_mdocs/toc
  * @copyright  2026 bdecent GmbH <info@bdecent.de>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later

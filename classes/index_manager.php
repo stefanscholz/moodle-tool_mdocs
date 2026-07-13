@@ -28,7 +28,6 @@ namespace tool_mdocs;
  * The catalogue of discovered documents, backed by a database table.
  */
 class index_manager {
-
     /** @var string Database table name. */
     const TABLE = 'tool_mdocs_index';
 
@@ -118,7 +117,11 @@ class index_manager {
     }
 
     /**
-     * Search documents by title, component or path.
+     * Search documents by title, component, path or content.
+     *
+     * Each returned record carries an {@see self::make_excerpt() excerpt}: a short
+     * plain-text snippet around the first content match (empty for title/path-only
+     * matches). The full content column is not returned.
      *
      * @param string $query user query
      * @param int $limit maximum rows
@@ -136,11 +139,45 @@ class index_manager {
         $titlelike = $DB->sql_like('title', ':title', false);
         $complike = $DB->sql_like('component', ':component', false);
         $pathlike = $DB->sql_like('relpath', ':relpath', false);
+        $contentlike = $DB->sql_like('content', ':content', false);
         $sql = "SELECT * FROM {" . self::TABLE . "}
-                 WHERE $titlelike OR $complike OR $pathlike
+                 WHERE $titlelike OR $complike OR $pathlike OR $contentlike
               ORDER BY title ASC";
-        $params = ['title' => $like, 'component' => $like, 'relpath' => $like];
+        $params = ['title' => $like, 'component' => $like, 'relpath' => $like, 'content' => $like];
 
-        return array_values($DB->get_records_sql($sql, $params, 0, $limit));
+        $records = array_values($DB->get_records_sql($sql, $params, 0, $limit));
+        foreach ($records as $record) {
+            $record->excerpt = self::make_excerpt((string) ($record->content ?? ''), $query);
+            unset($record->content);
+        }
+        return $records;
+    }
+
+    /**
+     * Build a short plain-text excerpt centred on the first match of the query.
+     *
+     * @param string $content the document's plain-text content
+     * @param string $query the search query
+     * @param int $radius characters of context to include on each side of the match
+     * @return string the excerpt (with ellipses where trimmed), or '' if there is no content
+     */
+    public static function make_excerpt(string $content, string $query, int $radius = 80): string {
+        if ($content === '') {
+            return '';
+        }
+
+        $pos = \core_text::strpos(\core_text::strtolower($content), \core_text::strtolower(trim($query)));
+        if ($pos === false) {
+            // Matched on title/component/path only: show the start of the document.
+            $snippet = \core_text::substr($content, 0, $radius * 2);
+            return \core_text::strlen($content) > \core_text::strlen($snippet) ? $snippet . '…' : $snippet;
+        }
+
+        $start = max(0, $pos - $radius);
+        $length = $radius * 2 + \core_text::strlen(trim($query));
+        $snippet = \core_text::substr($content, $start, $length);
+        $prefix = $start > 0 ? '…' : '';
+        $suffix = ($start + \core_text::strlen($snippet)) < \core_text::strlen($content) ? '…' : '';
+        return $prefix . trim($snippet) . $suffix;
     }
 }

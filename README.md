@@ -18,7 +18,8 @@ without leaving the site or digging through the filesystem.
   named folders (e.g. `docs`), or only files with named basenames (e.g. `readme.md`).
 - **mkdocs-like reader** — a component-grouped sidebar tree, rendered Markdown,
   a scroll-spy table of contents, and a filter box.
-- **Search** across document titles, components and paths.
+- **Full-text search** across document titles, components, paths *and document
+  content*, with a snippet showing the match in context.
 - **Secure asset serving** — images referenced from a document are served through a
   hardened endpoint (path-traversal defence, extension allowlist, capability check).
 - **Cached & indexed** — a database catalogue plus a rendered-output cache keep page

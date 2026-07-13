@@ -24,13 +24,13 @@
 
 namespace tool_mdocs;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+
 /**
  * Tests for {@see \tool_mdocs\discovery}.
- *
- * @covers \tool_mdocs\discovery
  */
+#[CoversClass(discovery::class)]
 final class discovery_test extends \advanced_testcase {
-
     /**
      * Absolute path to the sample plugin fixture.
      *
@@ -133,6 +133,60 @@ final class discovery_test extends \advanced_testcase {
     }
 
     /**
+     * The plain-text body of each document should be captured for searching,
+     * with Markdown punctuation stripped.
+     *
+     * @return void
+     */
+    public function test_document_content_is_captured_as_plain_text(): void {
+        $this->resetAfterTest();
+        set_config('inclusionmode', settings_helper::MODE_ALL, 'tool_mdocs');
+
+        $discovery = new discovery();
+        $bypath = [];
+        foreach ($discovery->scan_component('fixture_sample', 'fixture', $this->fixture_dir()) as $doc) {
+            $bypath[$doc->relpath] = $doc;
+        }
+
+        $this->assertArrayHasKey('readme.md', $bypath);
+        $this->assertStringContainsString('root readme for the discovery test fixture', $bypath['readme.md']->content);
+        // Heading markers and other Markdown punctuation are stripped.
+        $this->assertStringNotContainsString('#', $bypath['readme.md']->content);
+        // Underscores survive, so code identifiers stay searchable as written.
+        $this->assertStringContainsString('tool_mdocs_index', $bypath['readme.md']->content);
+    }
+
+    /**
+     * A directory that is itself another component's root must not be descended
+     * into, so its files are attributed to that (sub)plugin and not indexed twice.
+     *
+     * @return void
+     */
+    public function test_nested_component_directories_are_excluded(): void {
+        $this->resetAfterTest();
+        set_config('inclusionmode', settings_helper::MODE_ALL, 'tool_mdocs');
+
+        $discovery = new discovery();
+        $nesteddir = realpath($this->fixture_dir() . '/plugin/sub');
+
+        // Without any exclusion, the nested file is discovered as part of the parent.
+        $unscoped = array_map(
+            fn($doc) => $doc->relpath,
+            $discovery->scan_component('fixture_sample', 'fixture', $this->fixture_dir())
+        );
+        $this->assertContains('plugin/sub/nested.md', $unscoped);
+
+        // When the nested directory is a known component root, its files are skipped.
+        $scoped = array_map(
+            fn($doc) => $doc->relpath,
+            $discovery->scan_component('fixture_sample', 'fixture', $this->fixture_dir(), [$nesteddir => true])
+        );
+        $this->assertContains('readme.md', $scoped);
+        $this->assertContains('docs/guide.md', $scoped);
+        $this->assertNotContains('plugin/sub/nested.md', $scoped);
+    }
+
+    /**
      * Folder matching should compare whole path segments, not substrings.
      *
      * @return void
@@ -145,7 +199,7 @@ final class discovery_test extends \advanced_testcase {
         $discovery = new discovery();
         $this->assertTrue($discovery->is_included('docs/guide.md'));
         $this->assertTrue($discovery->is_included('sub/docs/deep.md'));
-        // "documentation" contains "docs" as a substring but is not a matching segment.
+        // Note: "documentation" contains "docs" as a substring but is not a matching segment.
         $this->assertFalse($discovery->is_included('documentation/guide.md'));
         $this->assertFalse($discovery->is_included('readme.md'));
     }

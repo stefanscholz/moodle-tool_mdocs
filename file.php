@@ -45,8 +45,10 @@ $base = realpath($base);
 $full = realpath($base . '/' . ltrim($relpath, '/'));
 
 // Path-traversal defence: the resolved path must live inside the component dir.
-if ($base === false || $full === false || !is_file($full)
-        || strpos($full, $base . DIRECTORY_SEPARATOR) !== 0) {
+if (
+    $base === false || $full === false || !is_file($full)
+        || strpos($full, $base . DIRECTORY_SEPARATOR) !== 0
+) {
     send_file_not_found();
 }
 

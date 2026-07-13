@@ -47,7 +47,12 @@ $PAGE->navbar->add($doc->title, $pageurl);
 
 /** @var \tool_mdocs\output\renderer $output */
 $output = $PAGE->get_renderer('tool_mdocs');
+$rendered = \tool_mdocs\markdown::render($doc, $context);
+
+// Publish the "On this page" table of contents as a fake block, so it lives in
+// the collapsible block drawer and can be hidden entirely by closing it.
+\tool_mdocs\output\toc_block::add_to_page($PAGE, $output, $rendered['toc']);
 
 echo $OUTPUT->header();
-echo $output->render(new \tool_mdocs\output\viewer_page($manager, $doc, $context));
+echo $output->render(new \tool_mdocs\output\viewer_page($manager, $doc, $rendered));
 echo $OUTPUT->footer();

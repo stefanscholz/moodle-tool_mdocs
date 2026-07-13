@@ -28,7 +28,6 @@ namespace tool_mdocs\output;
  * Renders the plugin's pages from Mustache templates.
  */
 class renderer extends \plugin_renderer_base {
-
     /**
      * Render the Documentation Center landing page.
      *

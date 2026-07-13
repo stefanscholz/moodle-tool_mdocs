@@ -29,9 +29,14 @@ namespace tool_mdocs;
  * admin inclusion rules.
  */
 class discovery {
-
     /** @var string[] Directory names never descended into. */
     const PRUNE_DIRS = ['.git', 'node_modules', 'vendor', 'build', 'fixtures', 'yui', 'phpunit'];
+
+    /** @var int Maximum number of bytes read from a file when indexing its content. */
+    const CONTENT_READ_LIMIT = 262144;
+
+    /** @var int Maximum number of characters of plain-text content stored per document. */
+    const CONTENT_STORE_LIMIT = 65535;
 
     /** @var string Configured inclusion mode. */
     protected string $mode;
@@ -61,9 +66,23 @@ class discovery {
      * @return document[] keyed numerically, de-duplicated by docid
      */
     public function discover(): array {
+        $components = $this->get_components();
+
+        // The canonical directory of every component. A plugin scan must not
+        // claim Markdown files that physically live inside one of its
+        // subplugins (or any other nested component) — those belong to that
+        // component and would otherwise be indexed twice.
+        $roots = [];
+        foreach ($components as $info) {
+            $root = realpath($info['dir']);
+            if ($root !== false) {
+                $roots[$root] = true;
+            }
+        }
+
         $docs = [];
-        foreach ($this->get_components() as $component => $info) {
-            foreach ($this->scan_component($component, $info['type'], $info['dir']) as $doc) {
+        foreach ($components as $component => $info) {
+            foreach ($this->scan_component($component, $info['type'], $info['dir'], $roots) as $doc) {
                 $docs[$doc->docid] = $doc;
             }
         }
@@ -79,7 +98,7 @@ class discovery {
         $components = [];
 
         foreach (array_keys(\core_component::get_plugin_types()) as $type) {
-            foreach (\core_component::get_plugins_of_type($type) as $name => $dir) {
+            foreach (\core_component::get_plugin_list($type) as $name => $dir) {
                 if (empty($dir) || !is_dir($dir)) {
                     continue;
                 }
@@ -105,9 +124,15 @@ class discovery {
      * @param string $component frankenstyle component
      * @param string $plugintype plugin type
      * @param string $dir absolute component directory
+     * @param array $componentroots realpath => true for every component root, so nested components are not descended into
      * @return document[]
      */
-    public function scan_component(string $component, string $plugintype, string $dir): array {
+    public function scan_component(
+        string $component,
+        string $plugintype,
+        string $dir,
+        array $componentroots = []
+    ): array {
         $realdir = realpath($dir);
         if ($realdir === false || !is_dir($realdir)) {
             return [];
@@ -115,51 +140,114 @@ class discovery {
 
         $prune = self::PRUNE_DIRS;
         $dirit = new \RecursiveDirectoryIterator($realdir, \FilesystemIterator::SKIP_DOTS);
-        $filter = new \RecursiveCallbackFilterIterator($dirit, function ($current) use ($prune) {
-            if ($current->isDir()) {
-                return !in_array($current->getFilename(), $prune, true);
+        $filter = new \RecursiveCallbackFilterIterator(
+            $dirit,
+            function ($current) use ($prune, $componentroots, $realdir) {
+                if (!$current->isDir()) {
+                    return true;
+                }
+                if (in_array($current->getFilename(), $prune, true)) {
+                    return false;
+                }
+                // Never descend into another component's directory: those files
+                // belong to that (sub)plugin, not to the one being scanned.
+                $real = $current->getRealPath();
+                return !($real !== false && $real !== $realdir && isset($componentroots[$real]));
             }
-            return true;
-        });
+        );
         $iterator = new \RecursiveIteratorIterator($filter, \RecursiveIteratorIterator::LEAVES_ONLY);
 
         $documents = [];
         foreach ($iterator as $fileinfo) {
-            if (!$fileinfo->isFile()) {
-                continue;
+            $document = $this->file_to_document($fileinfo, $realdir, $component, $plugintype);
+            if ($document !== null) {
+                $documents[] = $document;
             }
-            $filename = $fileinfo->getFilename();
-            if (\core_text::strtolower(pathinfo($filename, PATHINFO_EXTENSION)) !== 'md') {
-                continue;
-            }
-
-            $fullpath = $fileinfo->getPathname();
-            $relpath = ltrim(str_replace('\\', '/', substr($fullpath, strlen($realdir))), '/');
-            if ($relpath === '') {
-                continue;
-            }
-
-            if (!$this->is_included($relpath)) {
-                continue;
-            }
-
-            $filesize = (int) $fileinfo->getSize();
-            if ($filesize > $this->maxfilesize) {
-                continue;
-            }
-
-            $title = $this->extract_title($fullpath, $filename);
-            $documents[] = new document(
-                $component,
-                $plugintype,
-                $relpath,
-                $title,
-                (int) $fileinfo->getMTime(),
-                $filesize
-            );
         }
 
         return $documents;
+    }
+
+    /**
+     * Turn a single filesystem entry into a document, or null if it is excluded.
+     *
+     * @param \SplFileInfo $fileinfo the iterated filesystem entry
+     * @param string $realdir canonical component directory
+     * @param string $component frankenstyle component
+     * @param string $plugintype plugin type
+     * @return document|null the document, or null when the file is not an included Markdown file
+     */
+    protected function file_to_document(
+        \SplFileInfo $fileinfo,
+        string $realdir,
+        string $component,
+        string $plugintype
+    ): ?document {
+        if (!$fileinfo->isFile()) {
+            return null;
+        }
+        $filename = $fileinfo->getFilename();
+        if (\core_text::strtolower(pathinfo($filename, PATHINFO_EXTENSION)) !== 'md') {
+            return null;
+        }
+
+        $fullpath = $fileinfo->getPathname();
+        $relpath = ltrim(str_replace('\\', '/', substr($fullpath, strlen($realdir))), '/');
+        if ($relpath === '' || !$this->is_included($relpath)) {
+            return null;
+        }
+
+        $filesize = (int) $fileinfo->getSize();
+        if ($filesize > $this->maxfilesize) {
+            return null;
+        }
+
+        $raw = $this->read_file($fullpath, self::CONTENT_READ_LIMIT);
+
+        return new document(
+            $component,
+            $plugintype,
+            $relpath,
+            $this->extract_title($raw, $filename),
+            (int) $fileinfo->getMTime(),
+            $filesize,
+            $this->to_plain_text($raw)
+        );
+    }
+
+    /**
+     * Read up to a bounded number of bytes from a file.
+     *
+     * @param string $fullpath absolute path to the file
+     * @param int $maxbytes maximum number of bytes to read
+     * @return string the bytes read, or an empty string on failure
+     */
+    protected function read_file(string $fullpath, int $maxbytes): string {
+        $handle = @fopen($fullpath, 'rb');
+        if ($handle === false) {
+            return '';
+        }
+        $data = (string) fread($handle, $maxbytes);
+        fclose($handle);
+        return $data;
+    }
+
+    /**
+     * Reduce Markdown source to searchable plain text.
+     *
+     * @param string $raw raw Markdown source
+     * @return string normalised plain text, truncated to the storage limit
+     */
+    protected function to_plain_text(string $raw): string {
+        // Keep the visible text of links and images, drop their URLs and syntax.
+        $text = preg_replace('/!?\[([^\]]*)\]\([^)]*\)/', '$1', $raw);
+        // Strip common Markdown punctuation, keeping words (including code) intact.
+        // \x60 is the backtick used for code spans and fences. Underscores are
+        // kept because they are part of identifiers such as tool_mdocs_index.
+        $text = preg_replace('/[\x60*~#>|]+/', ' ', (string) $text);
+        // Collapse all whitespace runs to single spaces.
+        $text = preg_replace('/\s+/', ' ', (string) $text);
+        return \core_text::substr(trim((string) $text), 0, self::CONTENT_STORE_LIMIT);
     }
 
     /**
@@ -195,22 +283,18 @@ class discovery {
     /**
      * Derive a title: the first level-1 heading, else a humanised filename.
      *
-     * @param string $fullpath absolute path to the file
+     * @param string $raw raw Markdown source
      * @param string $filename basename
      * @return string
      */
-    protected function extract_title(string $fullpath, string $filename): string {
-        // Read only the head of the file: titles live near the top.
-        $handle = @fopen($fullpath, 'rb');
-        if ($handle !== false) {
-            $head = (string) fread($handle, 8192);
-            fclose($handle);
-            foreach (preg_split('/\r\n|\r|\n/', $head) as $line) {
-                if (preg_match('/^#\s+(.+?)\s*#*\s*$/', $line, $m)) {
-                    $title = trim($m[1]);
-                    if ($title !== '') {
-                        return \core_text::substr($title, 0, 255);
-                    }
+    protected function extract_title(string $raw, string $filename): string {
+        // Titles live near the top, so only inspect the head of the file.
+        $head = \core_text::substr($raw, 0, 8192);
+        foreach (preg_split('/\r\n|\r|\n/', $head) as $line) {
+            if (preg_match('/^#\s+(.+?)\s*#*\s*$/', $line, $m)) {
+                $title = trim($m[1]);
+                if ($title !== '') {
+                    return \core_text::substr($title, 0, 255);
                 }
             }
         }

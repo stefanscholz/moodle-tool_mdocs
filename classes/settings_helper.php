@@ -28,7 +28,6 @@ namespace tool_mdocs;
  * Helper for reading the plugin's inclusion-rule settings.
  */
 class settings_helper {
-
     /** @var string Include every Markdown file. */
     const MODE_ALL = 'all';
 

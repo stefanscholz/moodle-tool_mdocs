@@ -30,7 +30,6 @@ use tool_mdocs\index_manager;
  * Rebuilds the tool_mdocs_index catalogue from a filesystem scan.
  */
 class rebuild_index extends \core\task\scheduled_task {
-
     /**
      * Human-readable task name.
      *

@@ -9,6 +9,19 @@
     box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.15);
 }
 
+.tool-mdocs-result-title {
+    font-weight: 600;
+}
+
+.tool-mdocs-result-excerpt {
+    display: -webkit-box;
+    margin-top: 0.15rem;
+    overflow: hidden;
+    line-height: 1.3;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
 .tool-mdocs-sidebar .tool-mdocs-tree-group {
     margin-bottom: 0.25rem;
 }
@@ -37,33 +50,58 @@
     display: block;
 }
 
-.tool-mdocs-toc-sticky {
-    position: sticky;
-    top: 1rem;
-    max-height: calc(100vh - 2rem);
-    overflow-y: auto;
+.tool-mdocs-subgroup-title {
+    display: block;
+    margin-top: 0.35rem;
+    font-size: 0.85em;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
 }
 
-.tool-mdocs-toc .tool-mdocs-toc-l3 {
+.tool-mdocs-subgroup h4 {
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.tool-mdocs-toc-list .tool-mdocs-toc-l3 {
     padding-left: 0.75rem;
 }
 
-.tool-mdocs-toc .tool-mdocs-toc-l4 {
+.tool-mdocs-toc-list .tool-mdocs-toc-l4 {
     padding-left: 1.5rem;
 }
 
-.tool-mdocs-toc a {
+.tool-mdocs-toc-list a {
     display: block;
     padding: 0.1rem 0;
     color: inherit;
     text-decoration: none;
 }
 
-.tool-mdocs-toc a.tool-mdocs-toc-active {
+.tool-mdocs-toc-list a.tool-mdocs-toc-active {
     font-weight: 600;
     border-left: 2px solid currentColor;
     padding-left: 0.4rem;
     margin-left: -0.5rem;
+}
+
+/* Grid columns are flex items and default to min-width:auto, which lets wide
+   content (tables, long code) push a column past its track and overlap its
+   neighbours. Allowing the columns to shrink keeps each pane in its lane. */
+.tool-mdocs-viewer .row > [class*="col-"] {
+    min-width: 0;
+}
+
+.tool-mdocs-content {
+    min-width: 0;
+    max-width: 100%;
+}
+
+/* Wrap long words and inline code instead of forcing the content wider. */
+.tool-mdocs-markdown {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
 }
 
 .tool-mdocs-markdown img {
@@ -72,16 +110,21 @@
 }
 
 .tool-mdocs-markdown pre {
+    max-width: 100%;
     padding: 0.75rem 1rem;
     overflow-x: auto;
     background: rgba(0, 0, 0, 0.04);
     border-radius: 0.25rem;
 }
 
+/* Wide tables scroll horizontally within the content pane rather than
+   overflowing it. display:block turns the table into its own scroll box. */
 .tool-mdocs-markdown table {
-    width: auto;
+    display: block;
+    width: max-content;
     max-width: 100%;
     margin-bottom: 1rem;
+    overflow-x: auto;
     border-collapse: collapse;
 }
 

@@ -30,9 +30,17 @@
         "nodocsmessage": "No documentation was found.",
         "components": [
             {
-                "component": "mod_forum",
-                "displayname": "Forum",
-                "docs": [{"title": "Overview", "url": "https://example.com/view.php"}]
+                "component": "mod_videotime",
+                "displayname": "Video Time",
+                "hasdocs": true,
+                "docs": [{"title": "Overview", "url": "https://example.com/view.php"}],
+                "subgroups": [
+                    {
+                        "component": "videotimeplugin_analysis",
+                        "displayname": "Analysis",
+                        "docs": [{"title": "Admin guide", "url": "https://example.com/view.php"}]
+                    }
+                ]
             }
         ]
     }
@@ -64,11 +72,23 @@
                         <div class="card-body">
                             <h3 class="card-title h5 mb-1">{{displayname}}</h3>
                             <p class="text-muted small mb-2">{{component}}</p>
-                            <ul class="list-unstyled mb-0">
-                                {{#docs}}
-                                    <li class="mb-1"><a href="{{url}}">{{title}}</a></li>
-                                {{/docs}}
-                            </ul>
+                            {{#hasdocs}}
+                                <ul class="list-unstyled mb-0">
+                                    {{#docs}}
+                                        <li class="mb-1"><a href="{{url}}">{{title}}</a></li>
+                                    {{/docs}}
+                                </ul>
+                            {{/hasdocs}}
+                            {{#subgroups}}
+                                <div class="tool-mdocs-subgroup mt-2">
+                                    <h4 class="h6 text-muted mb-1">{{displayname}}</h4>
+                                    <ul class="list-unstyled mb-0">
+                                        {{#docs}}
+                                            <li class="mb-1"><a href="{{url}}">{{title}}</a></li>
+                                        {{/docs}}
+                                    </ul>
+                                </div>
+                            {{/subgroups}}
                         </div>
                     </div>
                 </div>

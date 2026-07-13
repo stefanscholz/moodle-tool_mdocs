@@ -17,22 +17,26 @@
 {{!
     @template tool_mdocs/viewer_page
 
-    Single-document viewer: sidebar tree, rendered content and table of contents.
+    Single-document viewer: sidebar tree and rendered content. The table of
+    contents is published separately as a fake block in the block drawer.
 
     Example context (json):
     {
         "title": "Overview",
         "indexurl": "https://example.com/admin/tool/mdocs/index.php",
         "contenthtml": "<h1 id=\"overview\">Overview</h1><p>Hello.</p>",
-        "hastoc": true,
-        "toclabel": "On this page",
         "sourcelabel": "Source: mod_forum/readme.md",
-        "toc": [{"text": "Overview", "id": "overview", "indent": "tool-mdocs-toc-l1"}],
         "tree": [
             {
-                "displayname": "Forum",
+                "displayname": "Video Time",
                 "hasactive": true,
-                "docs": [{"title": "Overview", "url": "https://example.com/view.php", "active": true}]
+                "docs": [{"title": "Overview", "url": "https://example.com/view.php", "active": true}],
+                "subgroups": [
+                    {
+                        "displayname": "Analysis",
+                        "docs": [{"title": "Admin guide", "url": "https://example.com/view.php", "active": false}]
+                    }
+                ]
             }
         ]
     }
@@ -56,31 +60,30 @@
                                     <a href="{{url}}" class="{{#active}}font-weight-bold tool-mdocs-active{{/active}}">{{title}}</a>
                                 </li>
                             {{/docs}}
+                            {{#subgroups}}
+                                <li class="tool-mdocs-tree-subgroup">
+                                    <span class="tool-mdocs-subgroup-title text-muted">{{displayname}}</span>
+                                    <ul class="list-unstyled pl-3">
+                                        {{#docs}}
+                                            <li data-region="mdocs-doc">
+                                                <a href="{{url}}" class="{{#active}}font-weight-bold tool-mdocs-active{{/active}}">{{title}}</a>
+                                            </li>
+                                        {{/docs}}
+                                    </ul>
+                                </li>
+                            {{/subgroups}}
                         </ul>
                     </li>
                 {{/tree}}
             </ul>
         </nav>
 
-        <main class="col-lg-6 tool-mdocs-content">
+        <main class="col-lg-9 tool-mdocs-content">
             <div class="tool-mdocs-markdown">
                 {{{contenthtml}}}
             </div>
             <p class="text-muted small mt-4 mb-0">{{sourcelabel}}</p>
         </main>
-
-        {{#hastoc}}
-            <aside class="col-lg-3 tool-mdocs-toc mb-3" aria-label="{{toclabel}}">
-                <div class="tool-mdocs-toc-sticky">
-                    <h2 class="h6 text-uppercase text-muted">{{toclabel}}</h2>
-                    <ul class="list-unstyled">
-                        {{#toc}}
-                            <li class="{{indent}}"><a href="#{{id}}" data-mdocs-toc="{{id}}">{{text}}</a></li>
-                        {{/toc}}
-                    </ul>
-                </div>
-            </aside>
-        {{/hastoc}}
     </div>
 </div>
 {{#js}}
