@@ -24,15 +24,14 @@
 
 namespace tool_mdocs\output;
 
-use PHPUnit\Framework\Attributes\CoversClass;
-
 /**
  * Tests for {@see \tool_mdocs\output\nav_tree}.
  *
  * These rely on the assignsubmission_* subplugins of mod_assign, which always
  * ship with Moodle core, to exercise subplugin folding.
+ *
+ * @covers \tool_mdocs\output\nav_tree
  */
-#[CoversClass(nav_tree::class)]
 final class nav_tree_test extends \advanced_testcase {
     /**
      * Build a minimal index record.
