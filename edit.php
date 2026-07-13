@@ -76,6 +76,10 @@ if ($mform->is_cancelled()) {
 $PAGE->set_title($id ? get_string('editpage', 'tool_mdocs') : get_string('newpage', 'tool_mdocs'));
 $PAGE->set_heading($id ? get_string('editpage', 'tool_mdocs') : get_string('newpage', 'tool_mdocs'));
 
+// Progressive enhancement: the content field is a plain textarea, and stays usable
+// as one. With JavaScript it gains a formatting toolbar and a preview tab.
+$PAGE->requires->js_call_amd('tool_mdocs/editor', 'init', ['id_content']);
+
 echo $OUTPUT->header();
 echo $OUTPUT->heading($id ? get_string('editpage', 'tool_mdocs') : get_string('newpage', 'tool_mdocs'));
 $mform->display();

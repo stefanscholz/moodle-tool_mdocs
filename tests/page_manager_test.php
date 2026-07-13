@@ -30,7 +30,6 @@ namespace tool_mdocs;
  * @covers \tool_mdocs\page_manager
  */
 final class page_manager_test extends \advanced_testcase {
-
     /**
      * Build a form-shaped data object for a page.
      *

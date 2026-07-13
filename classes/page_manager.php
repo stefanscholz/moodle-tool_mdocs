@@ -28,7 +28,6 @@ namespace tool_mdocs;
  * Reads and writes the tool_mdocs_page table and its attached files.
  */
 class page_manager {
-
     /** @var string Database table name. */
     const TABLE = 'tool_mdocs_page';
 

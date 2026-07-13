@@ -48,8 +48,13 @@ class nav_tree {
      * @param bool $canmanage whether the viewer may edit/delete pages
      * @return array<int, array> top-level component groups with docs and subgroups
      */
-    public static function build(array $records, ?string $activedocid = null, array $pagerecords = [],
-            ?int $activepageid = null, bool $canmanage = false): array {
+    public static function build(
+        array $records,
+        ?string $activedocid = null,
+        array $pagerecords = [],
+        ?int $activepageid = null,
+        bool $canmanage = false
+    ): array {
         $groups = [];
 
         foreach ($records as $record) {
@@ -69,8 +74,10 @@ class nav_tree {
 
             if (empty($record->component)) {
                 if (!isset($groups[self::SITE_GROUP])) {
-                    $groups[self::SITE_GROUP] = self::new_group(self::SITE_GROUP,
-                        get_string('sitedocumentation', 'tool_mdocs'));
+                    $groups[self::SITE_GROUP] = self::new_group(
+                        self::SITE_GROUP,
+                        get_string('sitedocumentation', 'tool_mdocs')
+                    );
                 }
                 $groups[self::SITE_GROUP]['docs'][] = $entry;
                 continue;
@@ -96,8 +103,13 @@ class nav_tree {
      * @param string|null $parent parent component when $component is a subplugin
      * @param array $entry the doc or page link entry
      */
-    protected static function place(array &$groups, string $topkey, string $component, ?string $parent,
-            array $entry): void {
+    protected static function place(
+        array &$groups,
+        string $topkey,
+        string $component,
+        ?string $parent,
+        array $entry
+    ): void {
         if ($parent === null) {
             $groups[$topkey]['docs'][] = $entry;
             return;
@@ -149,10 +161,14 @@ class nav_tree {
             'deleteurl' => null,
         ];
         if ($canmanage) {
-            $entry['editurl'] = (new \moodle_url('/admin/tool/mdocs/edit.php',
-                ['id' => $record->id]))->out(false);
-            $entry['deleteurl'] = (new \moodle_url('/admin/tool/mdocs/delete.php',
-                ['id' => $record->id]))->out(false);
+            $entry['editurl'] = (new \moodle_url(
+                '/admin/tool/mdocs/edit.php',
+                ['id' => $record->id]
+            ))->out(false);
+            $entry['deleteurl'] = (new \moodle_url(
+                '/admin/tool/mdocs/delete.php',
+                ['id' => $record->id]
+            ))->out(false);
         }
         return $entry;
     }

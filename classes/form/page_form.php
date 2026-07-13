@@ -30,7 +30,6 @@ use tool_mdocs\output\nav_tree;
  * Create/edit form for a documentation page.
  */
 class page_form extends \moodleform {
-
     /**
      * Define the form.
      */
@@ -44,8 +43,12 @@ class page_form extends \moodleform {
         $mform->setType('title', PARAM_TEXT);
         $mform->addRule('title', get_string('required'), 'required', null, 'client');
 
-        $mform->addElement('autocomplete', 'component', get_string('pagecomponent', 'tool_mdocs'),
-            self::component_options());
+        $mform->addElement(
+            'autocomplete',
+            'component',
+            get_string('pagecomponent', 'tool_mdocs'),
+            self::component_options()
+        );
         $mform->addHelpButton('component', 'pagecomponent', 'tool_mdocs');
 
         $mform->addElement('select', 'visible', get_string('pagevisibility', 'tool_mdocs'), [
@@ -54,14 +57,23 @@ class page_form extends \moodleform {
         ]);
         $mform->setDefault('visible', 1);
 
-        $mform->addElement('textarea', 'content', get_string('pagecontent', 'tool_mdocs'),
-            'wrap="virtual" rows="20" cols="80"');
+        $mform->addElement(
+            'textarea',
+            'content',
+            get_string('pagecontent', 'tool_mdocs'),
+            'wrap="virtual" rows="20" cols="80"'
+        );
         $mform->setType('content', PARAM_RAW);
         $mform->addRule('content', get_string('required'), 'required', null, 'client');
         $mform->addHelpButton('content', 'pagecontent', 'tool_mdocs');
 
-        $mform->addElement('filemanager', 'attachments', get_string('pageimages', 'tool_mdocs'), null,
-            self::file_options());
+        $mform->addElement(
+            'filemanager',
+            'attachments',
+            get_string('pageimages', 'tool_mdocs'),
+            null,
+            self::file_options()
+        );
         $mform->addHelpButton('attachments', 'pageimages', 'tool_mdocs');
 
         $this->add_action_buttons();

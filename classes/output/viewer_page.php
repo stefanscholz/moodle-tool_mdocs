@@ -62,8 +62,14 @@ class viewer_page implements \renderable, \templatable {
      * @param \stdClass|null $filedoc the active file document, if viewing one
      * @param \stdClass|null $userpage the active user page, if viewing one
      */
-    public function __construct(index_manager $index, page_manager $pages, array $rendered,
-            bool $canmanagepages, ?\stdClass $filedoc = null, ?\stdClass $userpage = null) {
+    public function __construct(
+        index_manager $index,
+        page_manager $pages,
+        array $rendered,
+        bool $canmanagepages,
+        ?\stdClass $filedoc = null,
+        ?\stdClass $userpage = null
+    ) {
         $this->index = $index;
         $this->pages = $pages;
         $this->rendered = $rendered;
@@ -82,8 +88,13 @@ class viewer_page implements \renderable, \templatable {
      * @param bool $canmanagepages
      * @return self
      */
-    public static function for_file(index_manager $index, page_manager $pages, \stdClass $doc,
-            array $rendered, bool $canmanagepages): self {
+    public static function for_file(
+        index_manager $index,
+        page_manager $pages,
+        \stdClass $doc,
+        array $rendered,
+        bool $canmanagepages
+    ): self {
         return new self($index, $pages, $rendered, $canmanagepages, $doc, null);
     }
 
@@ -97,8 +108,13 @@ class viewer_page implements \renderable, \templatable {
      * @param bool $canmanagepages
      * @return self
      */
-    public static function for_page(index_manager $index, page_manager $pages, \stdClass $page,
-            array $rendered, bool $canmanagepages): self {
+    public static function for_page(
+        index_manager $index,
+        page_manager $pages,
+        \stdClass $page,
+        array $rendered,
+        bool $canmanagepages
+    ): self {
         return new self($index, $pages, $rendered, $canmanagepages, null, $page);
     }
 

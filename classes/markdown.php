@@ -101,6 +101,24 @@ class markdown {
     }
 
     /**
+     * Render Markdown for the editor preview.
+     *
+     * This runs the same pipeline a saved page does — the same Markdown parser and
+     * the same output sanitiser — so the preview shows what will actually be
+     * published, rather than a lookalike produced by a second renderer in the
+     * browser. Relative links are not rewritten, because an unsaved page has no
+     * component directory to resolve them against.
+     *
+     * @param string $content raw Markdown
+     * @param \context $context context used for output cleaning
+     * @return array{html: string, toc: array}
+     */
+    public static function preview(string $content, \context $context): array {
+        $html = format_text($content, FORMAT_MARKDOWN, ['noclean' => false, 'context' => $context]);
+        return self::postprocess($html, '', '', false);
+    }
+
+    /**
      * Read a Markdown source file, validating it stays inside the component dir.
      *
      * @param string $component frankenstyle component
@@ -130,8 +148,12 @@ class markdown {
      * @param bool $rewritelinks rewrite relative inter-doc links and images (file docs only)
      * @return array{html: string, toc: array}
      */
-    protected static function postprocess(string $html, string $component, string $relpath,
-            bool $rewritelinks = true): array {
+    protected static function postprocess(
+        string $html,
+        string $component,
+        string $relpath,
+        bool $rewritelinks = true
+    ): array {
         if (trim($html) === '') {
             return ['html' => '', 'toc' => []];
         }

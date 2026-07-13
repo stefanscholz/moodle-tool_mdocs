@@ -52,7 +52,12 @@ if ($pageid) {
     $title = $userpage->title;
     $rendered = \tool_mdocs\markdown::render_page($userpage, $context);
     $renderable = \tool_mdocs\output\viewer_page::for_page(
-        $manager, $pagemanager, $userpage, $rendered, $canmanagepages);
+        $manager,
+        $pagemanager,
+        $userpage,
+        $rendered,
+        $canmanagepages
+    );
 } else {
     // File-based document.
     if ($component === '' || $docid === '') {
@@ -66,7 +71,12 @@ if ($pageid) {
     $title = $doc->title;
     $rendered = \tool_mdocs\markdown::render($doc, $context);
     $renderable = \tool_mdocs\output\viewer_page::for_file(
-        $manager, $pagemanager, $doc, $rendered, $canmanagepages);
+        $manager,
+        $pagemanager,
+        $doc,
+        $rendered,
+        $canmanagepages
+    );
 }
 
 $PAGE->set_url($pageurl);
