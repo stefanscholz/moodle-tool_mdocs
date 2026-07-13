@@ -99,6 +99,56 @@ final class provider_test extends \core_privacy\tests\provider_testcase {
     }
 
     /**
+     * Images embedded in a page are declared in the metadata, so they have to be
+     * exported too, not just the text.
+     *
+     * @return void
+     */
+    public function test_export_includes_images_embedded_in_a_page(): void {
+        $this->resetAfterTest();
+        $author = $this->getDataGenerator()->create_user();
+        $pageid = $this->create_page((int) $author->id, 'Page with a picture');
+
+        $context = \context_system::instance();
+        get_file_storage()->create_file_from_string([
+            'contextid' => $context->id,
+            'component' => 'tool_mdocs',
+            'filearea'  => page_manager::FILEAREA,
+            'itemid'    => $pageid,
+            'filepath'  => '/',
+            'filename'  => 'diagram.png',
+            'userid'    => $author->id,
+        ], 'not really a png');
+
+        $this->export_context_data_for_user((int) $author->id, $context, 'tool_mdocs');
+
+        $subcontext = [get_string('privacy:path:pages', 'tool_mdocs'), $pageid . ' Page with a picture'];
+        $files = writer::with_context($context)->get_files($subcontext);
+
+        $this->assertArrayHasKey('diagram.png', $files);
+    }
+
+    /**
+     * Once an author has been erased their id is replaced with 0, which is not a
+     * user and must not come back as one.
+     *
+     * @return void
+     */
+    public function test_an_erased_author_is_not_reported_as_a_user(): void {
+        $this->resetAfterTest();
+        $author = $this->getDataGenerator()->create_user();
+        $this->create_page((int) $author->id, 'Authored page');
+
+        provider::delete_data_for_all_users_in_context(\context_system::instance());
+
+        $userlist = new userlist(\context_system::instance(), 'tool_mdocs');
+        provider::get_users_in_context($userlist);
+
+        $this->assertNotContains(0, $userlist->get_userids());
+        $this->assertEmpty($userlist->get_userids());
+    }
+
+    /**
      * Erasure must unlink the author but keep the page: it is site documentation,
      * not personal content.
      *

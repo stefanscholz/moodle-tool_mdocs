@@ -31,6 +31,7 @@ use core_privacy\local\request\contextlist;
 use core_privacy\local\request\transform;
 use core_privacy\local\request\userlist;
 use core_privacy\local\request\writer;
+use tool_mdocs\page_manager;
 
 /**
  * Privacy provider.
@@ -109,8 +110,10 @@ class provider implements
             return;
         }
 
-        $userlist->add_from_sql('usercreated', "SELECT usercreated FROM {tool_mdocs_page}", []);
-        $userlist->add_from_sql('usermodified', "SELECT usermodified FROM {tool_mdocs_page}", []);
+        // Skip 0: that is what an author is replaced with once they are erased,
+        // and it is not a user.
+        $userlist->add_from_sql('usercreated', "SELECT usercreated FROM {tool_mdocs_page} WHERE usercreated <> 0", []);
+        $userlist->add_from_sql('usermodified', "SELECT usermodified FROM {tool_mdocs_page} WHERE usermodified <> 0", []);
     }
 
     /**
@@ -136,9 +139,14 @@ class provider implements
             return;
         }
 
-        $data = [];
+        $context = \context_system::instance();
+        $root = get_string('privacy:path:pages', 'tool_mdocs');
+
         foreach ($pages as $page) {
-            $data[] = (object) [
+            // One folder per page, so its images travel with the text they belong to.
+            $subcontext = [$root, $page->id . ' ' . $page->title];
+
+            $data = (object) [
                 'title'        => $page->title,
                 'content'      => $page->content,
                 'authored'     => transform::yesno((int) $page->usercreated === $userid),
@@ -146,12 +154,11 @@ class provider implements
                 'timecreated'  => transform::datetime($page->timecreated),
                 'timemodified' => transform::datetime($page->timemodified),
             ];
-        }
 
-        writer::with_context(\context_system::instance())->export_data(
-            [get_string('privacy:path:pages', 'tool_mdocs')],
-            (object) ['pages' => $data]
-        );
+            writer::with_context($context)
+                ->export_data($subcontext, $data)
+                ->export_area_files($subcontext, 'tool_mdocs', page_manager::FILEAREA, $page->id);
+        }
     }
 
     /**

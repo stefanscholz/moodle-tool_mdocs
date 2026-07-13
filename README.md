@@ -62,7 +62,15 @@ editing a Markdown file in place).
 
 ## Privacy
 
-The plugin stores no personal data; it only indexes files shipped inside plugins.
+Documentation read from inside plugins holds no personal data: it is files on
+disk, and nothing is recorded about who reads them.
+
+Pages authored in Moodle do, because each records who wrote it and who last
+edited it, and uploaded images record who uploaded them. The privacy provider
+declares this, exports a user's pages and images on request, and on erasure
+unlinks the author while keeping the page: the pages are the site's
+documentation, not the author's personal content, so the link to a person is
+removed rather than the documentation destroyed.
 
 ## Roadmap
 
