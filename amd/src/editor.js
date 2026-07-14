@@ -195,7 +195,7 @@ const apply = (textarea, action, placeholder) => {
         return;
     }
 
-    // setRangeText rather than assigning value, so ctrl-z still works.
+    // Use setRangeText rather than assigning value, so ctrl-z still works.
     textarea.setRangeText(change.text, change.from, change.to, 'end');
     textarea.setSelectionRange(change.selectFrom, change.selectTo);
     textarea.focus();
