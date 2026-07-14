@@ -20,6 +20,11 @@ without leaving the site or digging through the filesystem.
   a scroll-spy table of contents, and a filter box.
 - **Full-text search** across document titles, components, paths *and document
   content*, with a snippet showing the match in context.
+- **Contextual help** — a book icon in the navbar offers the documentation that
+  belongs to the page you are on, and what is written for *you* comes first. It
+  works with no configuration: a document's audience comes from its file name
+  (`teacher-guide.md`) and the pages it belongs to come from the plugin it lives
+  in. See `docs/conventions.md`.
 - **User-authored pages** — managers can write their own Markdown documentation pages
   directly in Moodle, either standalone (under a "Site documentation" section) or attached
   to a specific plugin, with a draft/publish flag and embedded images.

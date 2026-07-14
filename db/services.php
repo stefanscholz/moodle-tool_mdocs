@@ -25,6 +25,13 @@
 defined('MOODLE_INTERNAL') || die();
 
 $functions = [
+    'tool_mdocs_get_contextual_doc' => [
+        'classname'   => 'tool_mdocs\external\get_contextual_doc',
+        'description' => 'Render one document for the help icon, without leaving the page.',
+        'type'        => 'read',
+        'ajax'        => true,
+        'capabilities' => 'tool/mdocs:viewcontextual',
+    ],
     'tool_mdocs_preview_page' => [
         'classname'   => 'tool_mdocs\external\preview_page',
         'description' => 'Render Markdown for the page editor preview.',

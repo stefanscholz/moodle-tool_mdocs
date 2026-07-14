@@ -31,9 +31,18 @@ class index_manager {
     /** @var string Database table name. */
     const TABLE = 'tool_mdocs_index';
 
+    /** @var string Which pages each document belongs to. */
+    const TARGET_TABLE = 'tool_mdocs_target';
+
+    /** @var string A document that lives inside a plugin, as opposed to one authored in Moodle. */
+    const SOURCE_FILE = 'file';
+
+    /** @var string A page authored in Moodle. */
+    const SOURCE_PAGE = 'page';
+
     /** @var string Every column except the bulky content body, which is only needed for searching. */
-    const METADATA_FIELDS = 'id, docid, component, plugintype, relpath, basename, title, pagetypes, sortorder, ' .
-        'filesize, timemodified, timecreated';
+    const METADATA_FIELDS = 'id, docid, component, plugintype, relpath, basename, title, pagetypes, audience, ' .
+        'sortorder, filesize, timemodified, timecreated';
 
     /**
      * Rebuild the whole catalogue from a fresh filesystem scan.
@@ -48,17 +57,30 @@ class index_manager {
 
         $now = time();
         $records = [];
+        $targets = [];
         foreach ($documents as $doc) {
             $record = $doc->to_record();
             $record->timecreated = $now;
             $records[] = $record;
+
+            foreach ($doc->pagetypes as $pagetype) {
+                $targets[] = (object) [
+                    'source'   => self::SOURCE_FILE,
+                    'sourceid' => $doc->docid,
+                    'pagetype' => $pagetype,
+                ];
+            }
         }
 
         $transaction = $DB->start_delegated_transaction();
         $DB->delete_records(self::TABLE);
+        $DB->delete_records(self::TARGET_TABLE, ['source' => self::SOURCE_FILE]);
         if (!empty($records)) {
             // Insert in one batch: a site-wide scan can yield hundreds of rows.
             $DB->insert_records(self::TABLE, $records);
+        }
+        if (!empty($targets)) {
+            $DB->insert_records(self::TARGET_TABLE, $targets);
         }
         $transaction->allow_commit();
 
@@ -66,8 +88,10 @@ class index_manager {
         set_config('lastversionshash', $CFG->allversionshash ?? '', 'tool_mdocs');
         set_config('lastsettingshash', settings_helper::signature(), 'tool_mdocs');
 
-        // Drop any stale rendered output.
+        // Drop any stale rendered output, and any remembered answer about which
+        // documents belong to which page.
         \cache_helper::purge_by_definition('tool_mdocs', 'rendered');
+        \cache_helper::purge_by_definition('tool_mdocs', 'contextual');
 
         return count($records);
     }

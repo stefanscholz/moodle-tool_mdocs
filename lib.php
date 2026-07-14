@@ -23,6 +23,49 @@
  */
 
 /**
+ * Put a help icon in the navbar when the page being viewed has documentation.
+ *
+ * This runs on every page render, so the order of the checks is deliberate: the
+ * cheap ones that reject most requests come first, and the lookup that can touch
+ * the database comes last and is cached. Nothing here reads a document body.
+ *
+ * The capability is checked against the page's own context, not the system
+ * context. A teacher's role is assigned in a course, so a teacher holds no system
+ * capability at all — checking there would silently hide the help from exactly
+ * the people it is for. Core takes the same approach for its own documentation
+ * links (see page_get_doc_link_path()).
+ *
+ * @param renderer_base $renderer the page renderer
+ * @return string the icon, or '' when this page has nothing to say
+ */
+function tool_mdocs_render_navbar_output(renderer_base $renderer): string {
+    if (!isloggedin() || isguestuser() || \core_user::awaiting_action()) {
+        return '';
+    }
+
+    $page = $renderer->get_page();
+    $context = $page->context;
+    if (!$context instanceof context) {
+        return '';
+    }
+
+    if (!has_capability(\tool_mdocs\contextual::CAPABILITY, $context)) {
+        return '';
+    }
+
+    $matches = \tool_mdocs\contextual::for_page((string) $page->pagetype, $context);
+    if (empty($matches['foryou']) && empty($matches['others'])) {
+        // Nothing to say about this page. An icon that opens an empty box teaches
+        // people to stop pressing it.
+        return '';
+    }
+
+    $popover = new \tool_mdocs\output\help_popover($page, $matches);
+
+    return $renderer->render_from_template('tool_mdocs/navbar_popover', $popover->export_for_template($renderer));
+}
+
+/**
  * Serve images embedded in a user-authored documentation page.
  *
  * @param stdClass $course course object
@@ -43,7 +86,12 @@ function tool_mdocs_pluginfile($course, $cm, $context, $filearea, $args, $forced
     }
 
     require_login();
-    require_capability('tool/mdocs:view', $context);
+
+    // As in file.php: whoever may read the page may see the pictures in it, and a
+    // teacher reading contextual help holds no system capability.
+    if (!\tool_mdocs\access::can_read_assets()) {
+        send_file_not_found();
+    }
 
     $itemid = (int) array_shift($args);
 

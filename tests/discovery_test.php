@@ -62,7 +62,7 @@ final class discovery_test extends \advanced_testcase {
         set_config('inclusionmode', settings_helper::MODE_FOLDERS, 'tool_mdocs');
         set_config('includefolders', 'docs', 'tool_mdocs');
 
-        $this->assertEquals(['docs/guide.md'], $this->scan());
+        $this->assertEquals(['docs/guide.md', 'docs/teacher-guide.md'], $this->scan());
     }
 
     /**
@@ -201,5 +201,53 @@ final class discovery_test extends \advanced_testcase {
         // Note: "documentation" contains "docs" as a substring but is not a matching segment.
         $this->assertFalse($discovery->is_included('documentation/guide.md'));
         $this->assertFalse($discovery->is_included('readme.md'));
+    }
+
+    /**
+     * Front matter is metadata, not prose. If it survives into the title, the
+     * searchable text or the rendered page, the reader sees "--- audience: teacher"
+     * as if it were the first paragraph.
+     *
+     * @return void
+     */
+    public function test_front_matter_never_leaks_into_the_document(): void {
+        $this->resetAfterTest();
+        set_config('inclusionmode', settings_helper::MODE_ALL, 'tool_mdocs');
+
+        $discovery = new discovery();
+        $bypath = [];
+        foreach ($discovery->scan_component('fixture_sample', 'fixture', $this->fixture_dir()) as $doc) {
+            $bypath[$doc->relpath] = $doc;
+        }
+
+        $doc = $bypath['docs/teacher-guide.md'];
+
+        $this->assertSame('Fixture teacher guide', $doc->title);
+        $this->assertStringContainsString('searchable', $doc->content);
+        $this->assertStringNotContainsString('audience', $doc->content);
+        $this->assertStringNotContainsString('pagetypes', $doc->content);
+    }
+
+    /**
+     * What the front matter declares beats what the file name and directory guess.
+     *
+     * @return void
+     */
+    public function test_front_matter_overrides_the_guess(): void {
+        $this->resetAfterTest();
+        set_config('inclusionmode', settings_helper::MODE_ALL, 'tool_mdocs');
+
+        $discovery = new discovery();
+        $bypath = [];
+        foreach ($discovery->scan_component('fixture_sample', 'fixture', $this->fixture_dir()) as $doc) {
+            $bypath[$doc->relpath] = $doc;
+        }
+
+        $doc = $bypath['docs/teacher-guide.md'];
+
+        $this->assertSame(['teacher'], $doc->audiences);
+        // Declared explicitly, so the mod-videotime-* the component would have
+        // guessed does not apply.
+        $this->assertSame(['mod-videotime-view'], $doc->pagetypes);
     }
 }

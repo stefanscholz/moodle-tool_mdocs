@@ -204,15 +204,63 @@ class discovery {
 
         $raw = $this->read_file($fullpath, self::CONTENT_READ_LIMIT);
 
+        // Split the metadata off first. Everything downstream — the title, the
+        // searchable text, the rendered page — must see the body only, or the
+        // block is indexed and displayed as if it were prose.
+        [$meta, $body] = front_matter::split($raw);
+
         return new document(
             $component,
             $plugintype,
             $relpath,
-            $this->extract_title($raw, $filename),
+            $this->extract_title($body, $filename),
             (int) $fileinfo->getMTime(),
             $filesize,
-            self::to_plain_text($raw)
+            self::to_plain_text($body),
+            $this->resolve_pagetypes($meta, $component),
+            $this->resolve_audiences($meta, $relpath)
         );
+    }
+
+    /**
+     * Which pages a document belongs to.
+     *
+     * The component already answers this well enough for most documents, so front
+     * matter is only needed when a document belongs somewhere more specific than
+     * "anywhere in this plugin".
+     *
+     * @param array $meta the document's front matter
+     * @param string $component frankenstyle component
+     * @return string[] pagetype patterns, empty when the document opted out
+     */
+    protected function resolve_pagetypes(array $meta, string $component): array {
+        if (front_matter::is_excluded($meta)) {
+            return [];
+        }
+
+        $declared = front_matter::values($meta, 'pagetypes');
+        if (!empty($declared)) {
+            return $declared;
+        }
+
+        return targeting::pagetypes_for_component($component);
+    }
+
+    /**
+     * Who a document is written for.
+     *
+     * @param array $meta the document's front matter
+     * @param string $relpath the path of the file inside its component
+     * @return string[] audiences
+     */
+    protected function resolve_audiences(array $meta, string $relpath): array {
+        $declared = front_matter::values($meta, 'audience');
+        $declared = array_values(array_intersect($declared, targeting::AUDIENCES));
+        if (!empty($declared)) {
+            return $declared;
+        }
+
+        return [targeting::audience_from_path($relpath)];
     }
 
     /**

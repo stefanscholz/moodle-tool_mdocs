@@ -51,6 +51,28 @@ class page_form extends \moodleform {
         );
         $mform->addHelpButton('component', 'pagecomponent', 'tool_mdocs');
 
+        $audiences = [];
+        foreach (\tool_mdocs\targeting::AUDIENCES as $audience) {
+            $audiences[$audience] = get_string('audience_' . $audience, 'tool_mdocs');
+        }
+        $select = $mform->addElement(
+            'select',
+            'audience',
+            get_string('pageaudience', 'tool_mdocs'),
+            $audiences
+        );
+        $select->setMultiple(true);
+        $mform->addHelpButton('audience', 'pageaudience', 'tool_mdocs');
+
+        $mform->addElement(
+            'textarea',
+            'pagetypes',
+            get_string('pagepagetypes', 'tool_mdocs'),
+            'wrap="virtual" rows="3" cols="60"'
+        );
+        $mform->setType('pagetypes', PARAM_RAW);
+        $mform->addHelpButton('pagetypes', 'pagepagetypes', 'tool_mdocs');
+
         $mform->addElement('select', 'visible', get_string('pagevisibility', 'tool_mdocs'), [
             1 => get_string('published', 'tool_mdocs'),
             0 => get_string('draft', 'tool_mdocs'),

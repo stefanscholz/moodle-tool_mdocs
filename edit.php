@@ -58,6 +58,9 @@ if ($page !== null) {
     $toform->component = (string) ($page->component ?? '');
     $toform->visible = $page->visible;
     $toform->content = $page->content;
+    // Stored comma separated; shown one per line, which is how people write lists.
+    $toform->audience = array_filter(explode(',', (string) ($page->audience ?? '')));
+    $toform->pagetypes = implode("\n", array_filter(explode(',', (string) ($page->pagetypes ?? ''))));
 }
 
 $mform = new \tool_mdocs\form\page_form($editurl->out(false));
@@ -66,6 +69,8 @@ $mform->set_data($toform);
 if ($mform->is_cancelled()) {
     redirect($indexurl);
 } else if ($data = $mform->get_data()) {
+    // A multi-select arrives as an array; the manager stores a list.
+    $data->audience = is_array($data->audience ?? null) ? implode(',', $data->audience) : (string) ($data->audience ?? '');
     $pageid = $manager->save_page($data);
     file_save_draft_area_files($data->attachments, $context->id, 'tool_mdocs', 'content', $pageid, $fileoptions);
 

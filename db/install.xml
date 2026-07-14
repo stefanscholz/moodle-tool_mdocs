@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="admin/tool/mdocs/db" VERSION="20260714" COMMENT="Database schema for tool_mdocs (Documentation Center)."
+<XMLDB PATH="admin/tool/mdocs/db" VERSION="20260715" COMMENT="Database schema for tool_mdocs (Documentation Center)."
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../../lib/xmldb/xmldb.xsd"
 >
@@ -14,7 +14,8 @@
         <FIELD NAME="basename" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="File basename."/>
         <FIELD NAME="title" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="Derived document title."/>
         <FIELD NAME="content" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Plain-text document body, for full-text search."/>
-        <FIELD NAME="pagetypes" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Optional pagetype hints for contextual help."/>
+        <FIELD NAME="pagetypes" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Pagetype patterns this document belongs to, comma separated."/>
+        <FIELD NAME="audience" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" COMMENT="Audiences the document is written for, comma separated."/>
         <FIELD NAME="sortorder" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="filesize" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="File modification time."/>
@@ -35,6 +36,8 @@
         <FIELD NAME="content" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="Raw Markdown content."/>
         <FIELD NAME="contentformat" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="4" SEQUENCE="false" COMMENT="Content format; 4 = FORMAT_MARKDOWN."/>
         <FIELD NAME="component" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" COMMENT="Optional component association; null means standalone."/>
+        <FIELD NAME="pagetypes" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Pagetype patterns this page belongs to, comma separated."/>
+        <FIELD NAME="audience" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" COMMENT="Audiences the page is written for, comma separated."/>
         <FIELD NAME="visible" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="1 published, 0 draft."/>
         <FIELD NAME="sortorder" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="usercreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Author user id."/>
@@ -48,6 +51,21 @@
       <INDEXES>
         <INDEX NAME="component" UNIQUE="false" FIELDS="component"/>
         <INDEX NAME="visible" UNIQUE="false" FIELDS="visible"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="tool_mdocs_target" COMMENT="Which pages each document belongs to. Looked up on every page render, so the patterns live in an indexed column of their own rather than in a comma separated list.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="source" TYPE="char" LENGTH="4" NOTNULL="true" SEQUENCE="false" COMMENT="file = a document inside a plugin; page = a page authored in Moodle."/>
+        <FIELD NAME="sourceid" TYPE="char" LENGTH="40" NOTNULL="true" SEQUENCE="false" COMMENT="The document's docid, or the authored page's id."/>
+        <FIELD NAME="pagetype" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="A pagetype pattern, e.g. mod-videotime-view or mod-videotime-*."/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="pagetype" UNIQUE="false" FIELDS="pagetype"/>
+        <INDEX NAME="source-sourceid" UNIQUE="false" FIELDS="source, sourceid"/>
       </INDEXES>
     </TABLE>
   </TABLES>

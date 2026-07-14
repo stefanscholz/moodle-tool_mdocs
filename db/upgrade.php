@@ -75,5 +75,45 @@ function xmldb_tool_mdocs_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026071400, 'tool', 'mdocs');
     }
 
+    if ($oldversion < 2026071500) {
+        // Contextual help: who each document is for, and which pages it belongs to.
+        $index = new xmldb_table('tool_mdocs_index');
+        $field = new xmldb_field('audience', XMLDB_TYPE_CHAR, '100', null, null, null, null, 'pagetypes');
+        if (!$dbman->field_exists($index, $field)) {
+            $dbman->add_field($index, $field);
+        }
+
+        $page = new xmldb_table('tool_mdocs_page');
+        $field = new xmldb_field('pagetypes', XMLDB_TYPE_TEXT, null, null, null, null, null, 'component');
+        if (!$dbman->field_exists($page, $field)) {
+            $dbman->add_field($page, $field);
+        }
+        $field = new xmldb_field('audience', XMLDB_TYPE_CHAR, '100', null, null, null, null, 'pagetypes');
+        if (!$dbman->field_exists($page, $field)) {
+            $dbman->add_field($page, $field);
+        }
+
+        // The pattern lookup runs on every page render, so the patterns get an
+        // indexed column of their own rather than a LIKE over a comma separated list.
+        $target = new xmldb_table('tool_mdocs_target');
+        $target->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $target->add_field('source', XMLDB_TYPE_CHAR, '4', null, XMLDB_NOTNULL, null, null);
+        $target->add_field('sourceid', XMLDB_TYPE_CHAR, '40', null, XMLDB_NOTNULL, null, null);
+        $target->add_field('pagetype', XMLDB_TYPE_CHAR, '100', null, XMLDB_NOTNULL, null, null);
+        $target->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $target->add_index('pagetype', XMLDB_INDEX_NOTUNIQUE, ['pagetype']);
+        $target->add_index('source-sourceid', XMLDB_INDEX_NOTUNIQUE, ['source', 'sourceid']);
+
+        if (!$dbman->table_exists($target)) {
+            $dbman->create_table($target);
+        }
+
+        // Targets are worked out during a scan, so the catalogue has to be rebuilt
+        // before contextual help knows about anything.
+        unset_config('lastsettingshash', 'tool_mdocs');
+
+        upgrade_plugin_savepoint(true, 2026071500, 'tool', 'mdocs');
+    }
+
     return true;
 }

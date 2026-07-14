@@ -44,7 +44,12 @@ class markdown {
         }
 
         $raw = self::read_source($doc->component, $doc->relpath);
-        $result = self::process($raw, $doc->component, $doc->relpath, $context);
+
+        // The metadata block is instructions to the indexer, not part of the
+        // document; rendering it would put "--- audience: teacher ---" on the page.
+        [, $body] = front_matter::split($raw);
+
+        $result = self::process($body, $doc->component, $doc->relpath, $context);
 
         $cache->set($key, $result);
         return $result;

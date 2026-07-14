@@ -28,6 +28,31 @@ Three capabilities control access, all granted to Manager by default:
 | `tool/mdocs:view` | Read the Documentation Center |
 | `tool/mdocs:manage` | Change the settings and rebuild the index |
 | `tool/mdocs:managepages` | Create, edit and delete pages |
+| `tool/mdocs:viewcontextual` | See the help icon and read the documentation for the page you are on. Granted to managers and teachers, and checked **where you are**: a teacher holds it inside their own course. |
+
+## Help where you need it
+
+You do not have to come here to read documentation. On any page that has some,
+there is a **book icon in the navbar**. It lists what belongs to that page, opens
+a document in place, and does not make you go and look for it.
+
+What is written for *you* comes first. A teacher opening a Video Time activity is
+offered the **Analysis — Teacher guide**; an administrator on the same page is
+offered the administrator's guide. The rest is under **Written for other people**,
+because "what is my student being told?" is a fair question and its answer is the
+student guide.
+
+If a page has no documentation, **the icon is not there**. An icon that opens an
+empty box teaches people to stop pressing it.
+
+This works with no configuration at all: a document's audience comes from its file
+name (`teacher-guide.md`), and the pages it belongs to come from the plugin it
+lives in. Plugin authors can be more precise if they need to — see
+*conventions.md*, which is in this same folder.
+
+Teachers can read the help without being able to open the Documentation Center
+itself, which is why the document opens inside the popover rather than sending
+them here.
 
 ## Writing your own pages
 
@@ -45,6 +70,13 @@ A page has:
 - **Visibility.** *Published* is visible to every reader. *Draft* is visible only
   to people who can manage pages, and is flagged **Draft** in the list, so you can
   work on a page without publishing it half-finished.
+- **Written for.** Who the page is aimed at. It is offered first to those people
+  when they open the help icon.
+- **Show on these pages.** One Moodle page type per line, for example
+  `mod-videotime-view`. A `*` matches anything, so `mod-videotime-*` is every
+  Video Time page. Leave it empty and the page appears wherever the plugin you
+  filed it under appears — so a page filed against Video Time turns up on Video
+  Time's pages by itself.
 - **Images.** Upload them on the form, then reference them in the text.
 
 **Edit** and **Delete** links sit next to each page you have written.
