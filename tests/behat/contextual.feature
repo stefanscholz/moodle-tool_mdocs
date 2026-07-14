@@ -21,11 +21,11 @@ Feature: Find the documentation for the page I am on
 
   Scenario: A page with documentation offers it behind a help icon
     When I visit "/admin/tool/mdocs/index.php"
-    Then "[data-region='mdocs-help']" "css_element" should exist
+    Then "[data-mdocs-region='help']" "css_element" should exist
 
   Scenario: Opening the help icon lists the documents, and reads one without leaving the page
     When I visit "/admin/tool/mdocs/index.php"
-    And I click on "[data-region='mdocs-help'] .popover-region-toggle" "css_element"
+    And I click on "[data-mdocs-region='help'] .popover-region-toggle" "css_element"
     Then I should see "Documentation Center — user guide"
     When I click on "Documentation Center — user guide" "link"
     # Rendered in place, so the reader never leaves the page they needed help with.
@@ -33,7 +33,7 @@ Feature: Find the documentation for the page I am on
 
   Scenario: A page with no documentation offers no help icon at all
     When I visit "/admin/tool/mdocs/index.php"
-    And "[data-region='mdocs-help']" "css_element" should exist
+    And "[data-mdocs-region='help']" "css_element" should exist
     # Nothing ships documentation for the front page, so there is nothing to say.
     And I am on site homepage
-    Then "[data-region='mdocs-help']" "css_element" should not exist
+    Then "[data-mdocs-region='help']" "css_element" should not exist

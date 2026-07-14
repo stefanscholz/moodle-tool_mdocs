@@ -54,9 +54,13 @@
 }}
 {{< core/popover_region }}
     {{$classes}}popover-region-mdocs{{/classes}}
+    {{!
+        Not data-region: core/popover_region already puts one on this element, and
+        a second is a duplicate attribute.
+    }}
     {{$attributes}}
         id="tool-mdocs-popover-{{uniqid}}"
-        data-region="mdocs-help"
+        data-mdocs-region="help"
         data-pagetype="{{pagetype}}"
         data-pagecontextid="{{pagecontextid}}"
     {{/attributes}}
