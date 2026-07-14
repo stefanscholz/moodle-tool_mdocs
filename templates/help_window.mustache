@@ -1,0 +1,61 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template tool_mdocs/help_window
+
+    The window a document is read in: movable, resizable, and poppable out into a
+    window of its own. It is rendered alongside the help icon and moved to the end
+    of the body by tool_mdocs/help_popover, so that it floats above the page
+    instead of being clipped by the navbar it was born in.
+
+    Empty until a document is opened.
+
+    Example context (json):
+    {
+        "popouturl": "https://example.com/admin/tool/mdocs/help.php"
+    }
+}}
+<div class="tool-mdocs-help-window" data-region="mdocs-help-doc" data-popouturl="{{popouturl}}"
+     role="dialog" aria-labelledby="tool-mdocs-help-window-title" tabindex="-1" hidden>
+    {{!
+        The header is the drag handle. It is focusable so that it can be moved and
+        resized from the keyboard as well as the mouse; the arrow keys move it and
+        the same keys with Ctrl held resize it.
+    }}
+    <div class="tool-mdocs-help-window-header" data-region="mdocs-window-drag" tabindex="0"
+         aria-label="{{#str}} movehelpwindow, tool_mdocs {{/str}}">
+        <h2 class="tool-mdocs-help-window-title h6 m-0 text-truncate" id="tool-mdocs-help-window-title"
+            data-region="mdocs-window-title">{{#str}} helpforthispage, tool_mdocs {{/str}}</h2>
+        <div class="tool-mdocs-help-window-actions">
+            {{!
+                A real link, with a real href: if the browser blocks the pop-up, it
+                still opens the document rather than doing nothing at all.
+            }}
+            <a href="#" class="btn btn-link btn-sm p-1 icon-no-margin" data-action="popout" target="_blank"
+               title="{{#str}} popouthelp, tool_mdocs {{/str}}"
+               aria-label="{{#str}} popouthelp, tool_mdocs {{/str}}">
+                <i class="fa fa-external-link" aria-hidden="true"></i>
+            </a>
+            <button type="button" class="btn btn-link btn-sm p-1 icon-no-margin" data-action="close-window"
+                    title="{{#str}} closehelp, tool_mdocs {{/str}}"
+                    aria-label="{{#str}} closehelp, tool_mdocs {{/str}}">
+                <i class="fa fa-times" aria-hidden="true"></i>
+            </button>
+        </div>
+    </div>
+    <div class="tool-mdocs-help-window-body tool-mdocs-markdown" data-region="mdocs-help-body"></div>
+</div>

@@ -33,6 +33,17 @@ Feature: Find the documentation for the page I am on
     # Rendered in place, so the reader never leaves the page they needed help with.
     Then I should see "Where to find it" in the "[data-region='mdocs-help-doc']" "css_element"
 
+  Scenario: The document is read in a window that can be closed and popped out
+    When I visit "/admin/tool/mdocs/index.php"
+    And I click on "[data-mdocs-region='help'] .popover-region-toggle" "css_element"
+    And I click on "Documentation Center — user guide" "button" in the "[data-mdocs-region='help']" "css_element"
+    Then "[data-region='mdocs-help-doc']" "css_element" should be visible
+    # A real link to a real page, so that a browser which blocks the pop-up still
+    # opens the document rather than doing nothing at all.
+    And the "href" attribute of "[data-region='mdocs-help-doc'] [data-action='popout']" "css_element" should contain "/admin/tool/mdocs/help.php"
+    When I click on "[data-region='mdocs-help-doc'] [data-action='close-window']" "css_element"
+    Then "[data-region='mdocs-help-doc']" "css_element" should not be visible
+
   Scenario: A page with no documentation offers no help icon at all
     When I visit "/admin/tool/mdocs/index.php"
     And "[data-mdocs-region='help']" "css_element" should exist

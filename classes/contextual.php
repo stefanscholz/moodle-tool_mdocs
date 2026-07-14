@@ -83,6 +83,50 @@ class contextual {
     }
 
     /**
+     * Render one document, whatever kind it is.
+     *
+     * The caller must already have decided that the reader is allowed to see it:
+     * this only knows how to find a document and turn it into HTML. Both ways of
+     * reading contextual help — in the window on the page, and in the popped-out
+     * window of its own — come through here, so the two cannot drift apart.
+     *
+     * The rendering context is the system, even when the reader is in a course.
+     * That is where the documentation and its images live; using the reader's own
+     * context would point every image at the wrong place, and would cache a
+     * separate copy of the same document for every course.
+     *
+     * @param string $source file for a document inside a plugin, page for an authored one
+     * @param string $sourceid the document id, or the authored page's id
+     * @return array{title: string, html: string}
+     * @throws \moodle_exception when there is no such document
+     */
+    public static function read(string $source, string $sourceid): array {
+        $syscontext = \context_system::instance();
+
+        if ($source === index_manager::SOURCE_PAGE) {
+            $page = (new page_manager())->get_page((int) $sourceid);
+            if ($page === null || empty($page->visible)) {
+                // A draft is not an answer to anything, and confirming that it
+                // exists would be a small leak of its own.
+                throw new \moodle_exception('documentnotfound', 'tool_mdocs');
+            }
+
+            $rendered = markdown::render_page($page, $syscontext);
+
+            return ['title' => $page->title, 'html' => $rendered['html']];
+        }
+
+        $doc = (new index_manager())->get_document($sourceid);
+        if ($doc === null) {
+            throw new \moodle_exception('documentnotfound', 'tool_mdocs');
+        }
+
+        $rendered = markdown::render($doc, $syscontext);
+
+        return ['title' => $doc->title, 'html' => $rendered['html']];
+    }
+
+    /**
      * Every document that targets this page, most specific pattern first.
      *
      * Cached by pagetype rather than by user: what a page has is the same for

@@ -198,4 +198,63 @@ final class contextual_test extends \advanced_testcase {
 
         $this->assertFalse(contextual::has_any('mod-assign-view', $context));
     }
+
+    /**
+     * Reading a page authored on this site, which is what the help window and the
+     * popped-out window both ask for.
+     *
+     * @return void
+     */
+    public function test_read_renders_an_authored_page(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $pageid = (new page_manager())->save_page((object) [
+            'title' => 'House rules',
+            'content' => "# House rules\n\nDo not feed the server.",
+            'contentformat' => FORMAT_MARKDOWN,
+            'component' => '',
+            'visible' => 1,
+        ]);
+
+        $doc = contextual::read(index_manager::SOURCE_PAGE, (string) $pageid);
+
+        $this->assertSame('House rules', $doc['title']);
+        $this->assertStringContainsString('Do not feed the server.', $doc['html']);
+    }
+
+    /**
+     * A draft is not an answer to anything, and neither is a document that is not
+     * there. Both ways of reading go through here, so both are refused at once.
+     *
+     * @return void
+     */
+    public function test_read_refuses_a_draft_and_a_missing_document(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $draftid = (new page_manager())->save_page((object) [
+            'title' => 'Half written',
+            'content' => 'Not finished.',
+            'contentformat' => FORMAT_MARKDOWN,
+            'component' => '',
+            'visible' => 0,
+        ]);
+
+        $this->expectException(\moodle_exception::class);
+        contextual::read(index_manager::SOURCE_PAGE, (string) $draftid);
+    }
+
+    /**
+     * A document id that is in nobody's catalogue.
+     *
+     * @return void
+     */
+    public function test_read_refuses_an_unknown_document(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $this->expectException(\moodle_exception::class);
+        contextual::read(index_manager::SOURCE_FILE, 'nosuchdocument');
+    }
 }
