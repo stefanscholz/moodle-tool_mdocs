@@ -82,17 +82,23 @@
     {{/headeractions}}
     {{$content}}
         <div class="tool-mdocs-help-list" data-region="mdocs-help-list">
+            {{!
+                Buttons, not links: these open a document in place rather than
+                going anywhere. As anchors they also answered to "I follow" and to
+                every other search for a link with that title on the page beneath.
+            }}
             {{#hasforyou}}
                 <ul class="list-group list-group-flush">
                     {{#foryou}}
                         <li class="list-group-item p-0">
-                            <a href="#" class="d-block p-3 text-decoration-none tool-mdocs-help-item"
-                               data-action="open-doc" data-source="{{source}}" data-sourceid="{{sourceid}}">
+                            <button type="button"
+                                    class="btn btn-link d-block w-100 text-left p-3 text-decoration-none tool-mdocs-help-item"
+                                    data-action="open-doc" data-source="{{source}}" data-sourceid="{{sourceid}}">
                                 <span class="d-block font-weight-bold">{{title}}</span>
                                 <span class="d-block small text-muted">
                                     {{componentname}}{{#hasaudience}} &middot; {{audiencelabel}}{{/hasaudience}}
                                 </span>
-                            </a>
+                            </button>
                         </li>
                     {{/foryou}}
                 </ul>
@@ -108,13 +114,14 @@
                     <ul class="list-group list-group-flush" data-region="mdocs-others" {{^othersopen}}hidden{{/othersopen}}>
                         {{#others}}
                             <li class="list-group-item p-0">
-                                <a href="#" class="d-block p-3 text-decoration-none tool-mdocs-help-item"
-                                   data-action="open-doc" data-source="{{source}}" data-sourceid="{{sourceid}}">
+                                <button type="button"
+                                        class="btn btn-link d-block w-100 text-left p-3 text-decoration-none tool-mdocs-help-item"
+                                        data-action="open-doc" data-source="{{source}}" data-sourceid="{{sourceid}}">
                                     <span class="d-block">{{title}}</span>
                                     <span class="d-block small text-muted">
                                         {{componentname}}{{#hasaudience}} &middot; {{audiencelabel}}{{/hasaudience}}
                                     </span>
-                                </a>
+                                </button>
                             </li>
                         {{/others}}
                     </ul>

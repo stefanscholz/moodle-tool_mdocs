@@ -26,10 +26,12 @@ Feature: Find the documentation for the page I am on
   Scenario: Opening the help icon lists the documents, and reads one without leaving the page
     When I visit "/admin/tool/mdocs/index.php"
     And I click on "[data-mdocs-region='help'] .popover-region-toggle" "css_element"
-    Then I should see "Documentation Center — user guide"
-    When I click on "Documentation Center — user guide" "link"
+    # Scoped to the popover: this page happens to list the same documents, so an
+    # unscoped assertion would pass without the help icon working at all.
+    Then I should see "Documentation Center — user guide" in the "[data-mdocs-region='help']" "css_element"
+    When I click on "Documentation Center — user guide" "button" in the "[data-mdocs-region='help']" "css_element"
     # Rendered in place, so the reader never leaves the page they needed help with.
-    Then I should see "Where to find it"
+    Then I should see "Where to find it" in the "[data-region='mdocs-help-doc']" "css_element"
 
   Scenario: A page with no documentation offers no help icon at all
     When I visit "/admin/tool/mdocs/index.php"
