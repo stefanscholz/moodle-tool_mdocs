@@ -38,14 +38,17 @@ class discovery {
     /** @var int Maximum number of characters of plain-text content stored per document. */
     const CONTENT_STORE_LIMIT = 65535;
 
-    /** @var string Configured inclusion mode. */
-    protected string $mode;
+    /** @var bool Whether every Markdown file is indexed, whatever the lists say. */
+    protected bool $includeall;
 
     /** @var string[] Configured folder segments (lower-case). */
     protected array $folders;
 
     /** @var string[] Configured basenames (lower-case). */
     protected array $filenames;
+
+    /** @var string[] Names never indexed, whatever else says otherwise (lower-case). */
+    protected array $excluded;
 
     /** @var int Maximum indexable file size in bytes. */
     protected int $maxfilesize;
@@ -54,9 +57,10 @@ class discovery {
      * Load the inclusion rules from plugin configuration.
      */
     public function __construct() {
-        $this->mode = settings_helper::get_mode();
+        $this->includeall = settings_helper::include_all();
         $this->folders = settings_helper::get_folders();
         $this->filenames = settings_helper::get_filenames();
+        $this->excluded = settings_helper::get_excluded();
         $this->maxfilesize = settings_helper::get_max_filesize();
     }
 
@@ -308,24 +312,37 @@ class discovery {
         $relpath = \core_text::strtolower($relpath);
         $basename = basename($relpath);
 
-        switch ($this->mode) {
-            case settings_helper::MODE_ALL:
-                return true;
+        $folders = explode('/', $relpath);
+        array_pop($folders); // Drop the file basename: what is left is its path.
 
-            case settings_helper::MODE_FILENAMES:
-                return in_array($basename, $this->filenames, true);
-
-            case settings_helper::MODE_FOLDERS:
-            default:
-                $segments = explode('/', $relpath);
-                array_pop($segments); // Drop the file basename.
-                foreach ($segments as $segment) {
-                    if (in_array($segment, $this->folders, true)) {
-                        return true;
-                    }
-                }
-                return false;
+        // Exclusion is checked first and settles it. Without a way to say "never
+        // this one", a single unwanted file — an install.md in every plugin —
+        // forced the rules to be narrowed for everything else.
+        if (in_array($basename, $this->excluded, true)) {
+            return false;
         }
+        foreach ($folders as $folder) {
+            if (in_array($folder, $this->excluded, true)) {
+                return false;
+            }
+        }
+
+        if ($this->includeall) {
+            return true;
+        }
+
+        // The two lists add up. "Everything in docs, and also readme.md" is both
+        // rules at once, not a choice between them.
+        if (in_array($basename, $this->filenames, true)) {
+            return true;
+        }
+        foreach ($folders as $folder) {
+            if (in_array($folder, $this->folders, true)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

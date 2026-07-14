@@ -138,7 +138,7 @@ final class index_manager_test extends \advanced_testcase {
         $this->assertFalse($manager->is_stale());
 
         // Any change to which files are included makes it stale again.
-        set_config('inclusionmode', settings_helper::MODE_FILENAMES, 'tool_mdocs');
+        set_config('includefolders', '', 'tool_mdocs');
         $this->assertTrue($manager->is_stale());
     }
 
@@ -150,7 +150,7 @@ final class index_manager_test extends \advanced_testcase {
      */
     public function test_rebuild_records_the_settings_it_used(): void {
         $this->resetAfterTest();
-        set_config('inclusionmode', settings_helper::MODE_FILENAMES, 'tool_mdocs');
+        set_config('includefolders', '', 'tool_mdocs');
         set_config('includefilenames', 'zzznotarealfile.md', 'tool_mdocs');
 
         $manager = new index_manager();

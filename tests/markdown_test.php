@@ -58,7 +58,7 @@ final class markdown_test extends \advanced_testcase {
      */
     public function test_relative_document_link_is_rewritten_to_viewer(): void {
         $this->resetAfterTest();
-        set_config('inclusionmode', settings_helper::MODE_ALL, 'tool_mdocs');
+        set_config('includeall', 1, 'tool_mdocs');
         $context = \context_system::instance();
 
         $raw = "# Title\n\nSee the [guide](docs/guide.md).\n";
@@ -108,7 +108,7 @@ final class markdown_test extends \advanced_testcase {
      */
     public function test_links_escaping_the_component_root_are_not_rewritten(): void {
         $this->resetAfterTest();
-        set_config('inclusionmode', settings_helper::MODE_ALL, 'tool_mdocs');
+        set_config('includeall', 1, 'tool_mdocs');
         $context = \context_system::instance();
 
         $raw = "# Title\n\n[up](../../secret.md)\n";

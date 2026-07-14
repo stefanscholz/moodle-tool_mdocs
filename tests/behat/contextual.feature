@@ -15,7 +15,7 @@ Feature: Find the documentation for the page I am on
   # asserted in contextual_test.php, where a course and a role can be built.
   Background:
     Given the following config values are set as admin:
-      | inclusionmode  | folders | tool_mdocs |
+      | includefilenames |         | tool_mdocs |
       | includefolders | docs    | tool_mdocs |
     And I log in as "admin"
 

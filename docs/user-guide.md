@@ -129,18 +129,36 @@ The toolbar buttons insert that blank line for you.
 
 ## Choosing which plugin files are indexed
 
-Under **Settings**, **Which Markdown files to include** offers three rules. These
-affect the documentation found *inside plugins*; pages you write yourself are
-always included.
+Under **Settings**, three lists decide which Markdown files inside plugins are
+indexed. Pages you write yourself are always included, whatever the lists say.
 
-| Mode | Behaviour |
+| Setting | Behaviour |
 | --- | --- |
-| Only files inside specific folders | *(default)* A file is included when any folder in its path matches. Default: `docs`. |
-| Only files with specific names | A file is included when its name matches. Default: `readme.md`, `index.md`. |
-| All Markdown files | Every `.md` file in every plugin. |
+| **Included folders** | Everything inside a matching folder, at any depth. Default: `docs`. |
+| **Included file names** | A file whose own name matches, wherever it is found. Default: `readme.md`, `index.md`. |
+| **Never include** | A file whose own name matches, or that sits inside a matching folder. Empty by default. |
 
-Folder and file-name lists take **one entry per line** and are case-insensitive,
-so `README.md` matches a `readme.md` rule.
+The two inclusion lists **add up**. A file is indexed when it matches *either* of
+them, so the rule most sites want is simply both lists at once:
+
+```
+Included folders:     docs
+Included file names:  readme.md
+                      changes.md
+Never include:        install.md
+```
+
+That indexes everything in `docs`, plus every `readme.md` and `changes.md`, and
+never an `install.md` — because **Never include** wins over everything else. That
+is what it is for: keeping one unwanted file out without having to narrow the
+rules for all the others.
+
+All three lists take **one entry per line** and are case-insensitive, so
+`README.md` matches a `readme.md` rule.
+
+**Include every Markdown file** is the sledgehammer: it indexes every `.md` file
+in every plugin and ignores both inclusion lists. **Never include** still applies,
+so "everything except our `install.md`" is a single checkbox and a single line.
 
 Two more settings:
 
@@ -159,10 +177,10 @@ next visit. You do **not** need to press *Rebuild index* afterwards.
 
 That is the easiest change to see for yourself:
 
-1. Go to **Settings** and switch the mode to *All Markdown files*. Save.
+1. Go to **Settings** and tick *Include every Markdown file*. Save.
 2. Go to **Browse documentation** — without pressing anything else.
 3. The document count jumps, because the index rebuilt itself on arrival.
-4. Switch back and it shrinks again.
+4. Untick it and the count shrinks again.
 
 ## Searching
 

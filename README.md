@@ -14,8 +14,9 @@ without leaving the site or digging through the filesystem.
 
 - **Automatic discovery** of `.md` files across every installed plugin (and,
   optionally, Moodle core subsystems) using the `core_component` API.
-- **Configurable inclusion rules** — include *all* Markdown files, only files inside
-  named folders (e.g. `docs`), or only files with named basenames (e.g. `readme.md`).
+- **Configurable inclusion rules** — index whole folders (e.g. `docs`) *and* named
+  files (e.g. `readme.md`, `changes.md`), with an exclusion list that overrides both
+  (e.g. never `install.md`). Or simply index every `.md` file there is.
 - **mkdocs-like reader** — a component-grouped sidebar tree, rendered Markdown,
   a scroll-spy table of contents, and a filter box.
 - **Full-text search** across document titles, components, paths *and document
@@ -48,9 +49,13 @@ without leaving the site or digging through the filesystem.
 
 Under **Site administration ▸ Plugins ▸ Admin tools ▸ Documentation Center ▸ Settings**:
 
-- **Which Markdown files to include** — `all`, `folders`, or `filenames`.
-- **Included folders** / **Included file names** — the lists used by the folder and
-  filename modes.
+- **Included folders** / **Included file names** — the two lists **add up**: a file is
+  indexed when it matches either. "Everything in `docs`, and also `readme.md` and
+  `changes.md`" is both lists at once.
+- **Never include** — names that are skipped whatever the lists say, matched against a
+  file's own name (`install.md`) and against every folder in its path (`examples`).
+- **Include every Markdown file** — index everything, ignoring the two lists above.
+  *Never include* still applies.
 - **Include core subsystems** — also scan Moodle core, not just plugins.
 - **Maximum file size** — skip anything larger during indexing.
 

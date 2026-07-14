@@ -6,7 +6,7 @@ Feature: Browse plugin documentation in the Documentation Center
 
   Background:
     Given the following config values are set as admin:
-      | inclusionmode    | filenames | tool_mdocs |
+      | includefolders   |           | tool_mdocs |
       | includefilenames | readme.md | tool_mdocs |
     And I log in as "admin"
 
@@ -21,7 +21,7 @@ Feature: Browse plugin documentation in the Documentation Center
 
   Scenario: The Documentation Center reports when nothing matches the rules
     Given the following config values are set as admin:
-      | inclusionmode  | folders    | tool_mdocs |
+      | includefilenames |            | tool_mdocs |
       | includefolders | zzznotreal | tool_mdocs |
     When I navigate to "Documentation Center > Browse documentation" in site administration
     Then I should see "No Markdown files matched"
