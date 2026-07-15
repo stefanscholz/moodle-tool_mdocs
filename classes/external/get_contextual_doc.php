@@ -29,9 +29,6 @@ use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
 use tool_mdocs\contextual;
-use tool_mdocs\index_manager;
-use tool_mdocs\markdown;
-use tool_mdocs\page_manager;
 
 /**
  * Renders one document for the help popover.
@@ -76,52 +73,7 @@ class get_contextual_doc extends external_api {
         self::validate_context($context);
         require_capability(contextual::CAPABILITY, $context);
 
-        if ($params['source'] === index_manager::SOURCE_PAGE) {
-            return self::render_page((int) $params['sourceid']);
-        }
-
-        return self::render_file((string) $params['sourceid']);
-    }
-
-    /**
-     * Render a document that lives inside a plugin.
-     *
-     * Rendering happens in the system context even though the reader is somewhere
-     * else, because that is where the documentation and its images live. Using the
-     * reader's context here would point every image at the wrong place, and would
-     * also mean caching a separate copy of the same document for every course.
-     *
-     * @param string $docid the document's stable id
-     * @return array
-     */
-    protected static function render_file(string $docid): array {
-        $doc = (new index_manager())->get_document($docid);
-        if ($doc === null) {
-            throw new \moodle_exception('documentnotfound', 'tool_mdocs');
-        }
-
-        $rendered = markdown::render($doc, \context_system::instance());
-
-        return ['title' => $doc->title, 'html' => $rendered['html']];
-    }
-
-    /**
-     * Render a page authored on this site.
-     *
-     * @param int $pageid the page's id
-     * @return array
-     */
-    protected static function render_page(int $pageid): array {
-        $page = (new page_manager())->get_page($pageid);
-        if ($page === null || empty($page->visible)) {
-            // A draft is not an answer to anything, and confirming that it exists
-            // would be a small leak of its own.
-            throw new \moodle_exception('documentnotfound', 'tool_mdocs');
-        }
-
-        $rendered = markdown::render_page($page, \context_system::instance());
-
-        return ['title' => $page->title, 'html' => $rendered['html']];
+        return contextual::read((string) $params['source'], (string) $params['sourceid']);
     }
 
     /**

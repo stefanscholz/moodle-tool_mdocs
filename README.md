@@ -26,6 +26,9 @@ without leaving the site or digging through the filesystem.
   works with no configuration: a document's audience comes from its file name
   (`teacher-guide.md`) and the pages it belongs to come from the plugin it lives
   in. See `docs/conventions.md`.
+- **A window that gets out of the way** — the document opens in a panel you can
+  drag, resize and remember, or pop out into a browser window of its own to read
+  beside the page it is explaining.
 - **User-authored pages** — managers can write their own Markdown documentation pages
   directly in Moodle, either standalone (under a "Site documentation" section) or attached
   to a specific plugin, with a draft/publish flag and embedded images.

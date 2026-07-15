@@ -51,8 +51,26 @@ lives in. Plugin authors can be more precise if they need to — see
 *conventions.md*, which is in this same folder.
 
 Teachers can read the help without being able to open the Documentation Center
-itself, which is why the document opens inside the popover rather than sending
-them here.
+itself, which is why the document opens where they are rather than sending them
+here.
+
+### The window the document opens in
+
+Documentation is read *while* you work, so the window it opens in gets out of your
+way:
+
+- **Move it.** Drag it by its title bar. Or give the title bar the keyboard focus
+  and use the arrow keys — hold **Ctrl** and the arrow keys resize it instead.
+- **Resize it.** Drag the corner, bottom right.
+- **Pop it out.** The ⧉ button in the title bar opens the document in a browser
+  window of its own, so you can put it beside Moodle on a second screen instead of
+  on top of the page you are reading it for. (If your browser blocks pop-ups it
+  opens in a new tab, which is the same document either way.)
+- **Close it.** The × button, or the **Esc** key.
+
+Where you put the window and how big you made it are remembered in your browser,
+so the next document you open — on any page, on any day — arrives where you left
+the last one.
 
 ## Writing your own pages
 

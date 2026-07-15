@@ -62,7 +62,14 @@ function tool_mdocs_render_navbar_output(renderer_base $renderer): string {
 
     $popover = new \tool_mdocs\output\help_popover($page, $matches);
 
-    return $renderer->render_from_template('tool_mdocs/navbar_popover', $popover->export_for_template($renderer));
+    // The window the documents are read in comes with the icon, empty, rather than
+    // being built when one is opened: it is a handful of static elements, and
+    // rendering it here keeps opening a document down to the one request that
+    // actually fetches it.
+    return $renderer->render_from_template('tool_mdocs/navbar_popover', $popover->export_for_template($renderer))
+        . $renderer->render_from_template('tool_mdocs/help_window', [
+            'popouturl' => (new moodle_url('/admin/tool/mdocs/help.php'))->out(false),
+        ]);
 }
 
 /**
