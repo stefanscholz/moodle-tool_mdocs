@@ -49,6 +49,12 @@ class document {
     /** @var string Plain-text body used for full-text search. */
     public string $content;
 
+    /** @var string[] Pagetype patterns this document belongs to. */
+    public array $pagetypes;
+
+    /** @var string[] Audiences this document is written for. */
+    public array $audiences;
+
     /** @var int File modification time. */
     public int $timemodified;
 
@@ -65,6 +71,8 @@ class document {
      * @param int $timemodified file mtime
      * @param int $filesize file size in bytes
      * @param string $content plain-text body for full-text search
+     * @param string[] $pagetypes pagetype patterns for contextual help
+     * @param string[] $audiences audiences the document is written for
      */
     public function __construct(
         string $component,
@@ -73,7 +81,9 @@ class document {
         string $title,
         int $timemodified,
         int $filesize,
-        string $content = ''
+        string $content = '',
+        array $pagetypes = [],
+        array $audiences = []
     ) {
         $this->component = $component;
         $this->plugintype = $plugintype;
@@ -81,6 +91,8 @@ class document {
         $this->basename = basename($relpath);
         $this->title = $title;
         $this->content = $content;
+        $this->pagetypes = $pagetypes;
+        $this->audiences = $audiences;
         $this->timemodified = $timemodified;
         $this->filesize = $filesize;
         $this->docid = self::make_docid($component, $relpath);
@@ -111,7 +123,8 @@ class document {
         $record->basename = $this->basename;
         $record->title = $this->title;
         $record->content = $this->content;
-        $record->pagetypes = null;
+        $record->pagetypes = $this->pagetypes ? implode(',', $this->pagetypes) : null;
+        $record->audience = $this->audiences ? implode(',', $this->audiences) : null;
         $record->sortorder = 0;
         $record->filesize = $this->filesize;
         $record->timemodified = $this->timemodified;

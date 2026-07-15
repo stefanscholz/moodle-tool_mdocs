@@ -54,4 +54,24 @@ $capabilities = [
             'manager' => CAP_ALLOW,
         ],
     ],
+
+    // See the help icon, and read the documentation that belongs to the page you
+    // are on.
+    //
+    // This is deliberately not tool/mdocs:view. That one is a system capability,
+    // and a teacher's role is assigned in a course, so a teacher never holds it —
+    // widening its archetypes would have changed nothing. This capability is
+    // checked against the context of the page being viewed, which walks up the
+    // tree: a manager assigned at the system holds it everywhere, and a teacher
+    // holds it inside their own course and nowhere else. It is the same approach
+    // core takes for its own documentation links (moodle/site:doclinks).
+    'tool/mdocs:viewcontextual' => [
+        'captype'      => 'read',
+        'contextlevel' => CONTEXT_COURSE,
+        'archetypes'   => [
+            'manager'        => CAP_ALLOW,
+            'editingteacher' => CAP_ALLOW,
+            'teacher'        => CAP_ALLOW,
+        ],
+    ],
 ];

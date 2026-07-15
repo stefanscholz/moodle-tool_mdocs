@@ -87,12 +87,17 @@ class page_manager {
     public function save_page(\stdClass $data): int {
         global $DB, $USER;
 
+        $pagetypes = self::clean_list($data->pagetypes ?? '');
+        $audiences = array_values(array_intersect(self::clean_list($data->audience ?? ''), targeting::AUDIENCES));
+
         $now = time();
         $record = new \stdClass();
         $record->title = $data->title;
         $record->content = $data->content;
         $record->contentformat = isset($data->contentformat) ? (int) $data->contentformat : FORMAT_MARKDOWN;
         $record->component = (empty($data->component)) ? null : $data->component;
+        $record->pagetypes = $pagetypes ? implode(',', $pagetypes) : null;
+        $record->audience = $audiences ? implode(',', $audiences) : null;
         $record->visible = empty($data->visible) ? 0 : 1;
         $record->sortorder = isset($data->sortorder) ? (int) $data->sortorder : 0;
         $record->usermodified = $USER->id;
@@ -108,10 +113,66 @@ class page_manager {
             $id = $record->id;
         }
 
-        // Rendered output for this page may now be stale.
-        \cache_helper::purge_by_definition('tool_mdocs', 'rendered');
+        // A page with no patterns of its own belongs wherever its plugin's own
+        // documentation belongs, so filing a page against Video Time is enough to
+        // have it turn up on Video Time's pages.
+        if (empty($pagetypes) && !empty($record->component)) {
+            $pagetypes = targeting::pagetypes_for_component($record->component);
+        }
+        $this->write_targets($id, $pagetypes);
+
+        $this->purge_caches();
 
         return $id;
+    }
+
+    /**
+     * Record which pages a page belongs to.
+     *
+     * @param int $id the page's id
+     * @param string[] $pagetypes the pagetype patterns
+     * @return void
+     */
+    protected function write_targets(int $id, array $pagetypes): void {
+        global $DB;
+
+        $conditions = ['source' => index_manager::SOURCE_PAGE, 'sourceid' => (string) $id];
+
+        $transaction = $DB->start_delegated_transaction();
+        $DB->delete_records(index_manager::TARGET_TABLE, $conditions);
+
+        $targets = [];
+        foreach ($pagetypes as $pagetype) {
+            $targets[] = (object) [
+                'source'   => index_manager::SOURCE_PAGE,
+                'sourceid' => (string) $id,
+                'pagetype' => $pagetype,
+            ];
+        }
+        if (!empty($targets)) {
+            $DB->insert_records(index_manager::TARGET_TABLE, $targets);
+        }
+        $transaction->allow_commit();
+    }
+
+    /**
+     * Split a textarea or comma-separated value into a clean list.
+     *
+     * @param string $raw the submitted value
+     * @return string[] lower-cased, de-duplicated, in order
+     */
+    protected static function clean_list(string $raw): array {
+        $items = preg_split('/[\r\n,]+/', $raw) ?: [];
+
+        $clean = [];
+        foreach ($items as $item) {
+            $item = \core_text::strtolower(trim($item));
+            if ($item !== '') {
+                $clean[$item] = true;
+            }
+        }
+
+        return array_keys($clean);
     }
 
     /**
@@ -128,8 +189,22 @@ class page_manager {
         $fs->delete_area_files($context->id, 'tool_mdocs', self::FILEAREA, $id);
 
         $DB->delete_records(self::TABLE, ['id' => $id]);
+        $DB->delete_records(index_manager::TARGET_TABLE, [
+            'source'   => index_manager::SOURCE_PAGE,
+            'sourceid' => (string) $id,
+        ]);
 
+        $this->purge_caches();
+    }
+
+    /**
+     * Drop what the site remembers about pages, after one has changed.
+     *
+     * @return void
+     */
+    protected function purge_caches(): void {
         \cache_helper::purge_by_definition('tool_mdocs', 'rendered');
+        \cache_helper::purge_by_definition('tool_mdocs', 'contextual');
     }
 
     /**

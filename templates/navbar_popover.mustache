@@ -1,0 +1,144 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template tool_mdocs/navbar_popover
+
+    The help icon in the navbar, listing the documentation that belongs to this
+    page. Only rendered when there is something to show.
+
+    Example context (json):
+    {
+        "uniqid": "abc123",
+        "pagetype": "mod-videotime-view",
+        "pagecontextid": 42,
+        "count": 2,
+        "hasforyou": true,
+        "foryou": [
+            {
+                "source": "file",
+                "sourceid": "9f1a",
+                "title": "Analysis — Teacher guide",
+                "componentname": "Analysis",
+                "audiencelabel": "Teacher",
+                "hasaudience": true
+            }
+        ],
+        "hasothers": true,
+        "others": [
+            {
+                "source": "file",
+                "sourceid": "7b2c",
+                "title": "Analysis — Administrator guide",
+                "componentname": "Analysis",
+                "audiencelabel": "Administrator",
+                "hasaudience": true
+            }
+        ],
+        "canbrowse": true,
+        "browseurl": "https://example.com/admin/tool/mdocs/index.php"
+    }
+}}
+{{< core/popover_region }}
+    {{$classes}}popover-region-mdocs{{/classes}}
+    {{!
+        Not data-region: core/popover_region already puts one on this element, and
+        a second is a duplicate attribute.
+    }}
+    {{$attributes}}
+        id="tool-mdocs-popover-{{uniqid}}"
+        data-mdocs-region="help"
+        data-pagetype="{{pagetype}}"
+        data-pagecontextid="{{pagecontextid}}"
+    {{/attributes}}
+    {{$togglelabel}}{{#str}} helpforthispage, tool_mdocs {{/str}}{{/togglelabel}}
+    {{$togglecontent}}
+        <i class="fa fa-book" aria-hidden="true"></i>
+        <span class="badge bg-primary text-white tool-mdocs-help-count">{{count}}</span>
+    {{/togglecontent}}
+    {{$containerrole}}dialog{{/containerrole}}
+    {{$containerlabel}}{{#str}} helpforthispage, tool_mdocs {{/str}}{{/containerlabel}}
+    {{$headertext}}{{#str}} helpforthispage, tool_mdocs {{/str}}{{/headertext}}
+    {{$headeractions}}
+        {{#canbrowse}}
+            <a class="tool-mdocs-headeraction icon-no-margin" href="{{browseurl}}"
+               title="{{#str}} browsedocs, tool_mdocs {{/str}}">
+                {{#pix}} i/settings, core {{/pix}}
+            </a>
+        {{/canbrowse}}
+    {{/headeractions}}
+    {{$content}}
+        <div class="tool-mdocs-help-list" data-region="mdocs-help-list">
+            {{!
+                Buttons, not links: these open a document in place rather than
+                going anywhere. As anchors they also answered to "I follow" and to
+                every other search for a link with that title on the page beneath.
+            }}
+            {{#hasforyou}}
+                <ul class="list-group list-group-flush">
+                    {{#foryou}}
+                        <li class="list-group-item p-0">
+                            <button type="button"
+                                    class="btn btn-link d-block w-100 text-left p-3 text-decoration-none tool-mdocs-help-item"
+                                    data-action="open-doc" data-source="{{source}}" data-sourceid="{{sourceid}}">
+                                <span class="d-block font-weight-bold">{{title}}</span>
+                                <span class="d-block small text-muted">
+                                    {{componentname}}{{#hasaudience}} &middot; {{audiencelabel}}{{/hasaudience}}
+                                </span>
+                            </button>
+                        </li>
+                    {{/foryou}}
+                </ul>
+            {{/hasforyou}}
+
+            {{#hasothers}}
+                <div class="tool-mdocs-help-others">
+                    <button type="button" class="btn btn-link btn-sm w-100 text-left tool-mdocs-others-toggle"
+                            data-action="toggle-others"
+                            aria-expanded="{{#othersopen}}true{{/othersopen}}{{^othersopen}}false{{/othersopen}}">
+                        {{#str}} otheraudiences, tool_mdocs {{/str}}
+                    </button>
+                    <ul class="list-group list-group-flush" data-region="mdocs-others" {{^othersopen}}hidden{{/othersopen}}>
+                        {{#others}}
+                            <li class="list-group-item p-0">
+                                <button type="button"
+                                        class="btn btn-link d-block w-100 text-left p-3 text-decoration-none tool-mdocs-help-item"
+                                        data-action="open-doc" data-source="{{source}}" data-sourceid="{{sourceid}}">
+                                    <span class="d-block">{{title}}</span>
+                                    <span class="d-block small text-muted">
+                                        {{componentname}}{{#hasaudience}} &middot; {{audiencelabel}}{{/hasaudience}}
+                                    </span>
+                                </button>
+                            </li>
+                        {{/others}}
+                    </ul>
+                </div>
+            {{/hasothers}}
+        </div>
+
+        <div class="tool-mdocs-help-doc tool-mdocs-markdown p-3" data-region="mdocs-help-doc" hidden>
+            <button type="button" class="btn btn-link btn-sm p-0 mb-2" data-action="back">
+                &laquo; {{#str}} backtolist, tool_mdocs {{/str}}
+            </button>
+            <div data-region="mdocs-help-body"></div>
+        </div>
+    {{/content}}
+{{/ core/popover_region }}
+{{#js}}
+require(['tool_mdocs/help_popover'], function(Help) {
+    Help.init('tool-mdocs-popover-{{uniqid}}');
+});
+{{/js}}

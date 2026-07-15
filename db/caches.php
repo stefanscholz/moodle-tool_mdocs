@@ -35,4 +35,18 @@ $definitions = [
         'staticacceleration' => true,
         'staticaccelerationsize' => 10,
     ],
+
+    // Which documents belong to a page, keyed by pagetype. Read on every page
+    // render, so it must not touch the database in the common case. Keyed by
+    // pagetype and not by user: the documents a page has are the same for
+    // everybody, and only the audience filter differs, which is done in PHP.
+    'contextual' => [
+        'mode'          => cache_store::MODE_APPLICATION,
+        // Keyed by pagetype, and a pagetype has hyphens in it, which is not a
+        // simple key. Moodle hashes it for us.
+        'simplekeys'    => false,
+        'simpledata'    => false,
+        'staticacceleration' => true,
+        'staticaccelerationsize' => 2,
+    ],
 ];

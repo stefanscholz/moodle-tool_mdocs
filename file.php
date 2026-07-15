@@ -29,7 +29,19 @@ require(__DIR__ . '/../../../config.php');
 require_once($CFG->libdir . '/filelib.php');
 
 require_login(null, false);
-require_capability('tool/mdocs:view', context_system::instance());
+
+// Anyone allowed to read a document is allowed to see the pictures in it. A
+// teacher reading contextual help in their course holds no system capability, so
+// checking only tool/mdocs:view here would serve them a document full of broken
+// images.
+if (!\tool_mdocs\access::can_read_assets()) {
+    throw new required_capability_exception(
+        context_system::instance(),
+        'tool/mdocs:view',
+        'nopermissions',
+        ''
+    );
+}
 
 $component = required_param('component', PARAM_COMPONENT);
 $relpath = required_param('path', PARAM_PATH);

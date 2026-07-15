@@ -164,3 +164,37 @@
 .tool-mdocs-editor-preview > :last-child {
     margin-bottom: 0;
 }
+
+/* The help icon in the navbar, and the documents behind it. */
+.popover-region-mdocs .tool-mdocs-help-count {
+    position: absolute;
+    top: 0.15rem;
+    right: 0.15rem;
+    font-size: 0.65rem;
+    line-height: 1;
+    padding: 0.15rem 0.3rem;
+}
+
+.popover-region-mdocs .tool-mdocs-help-item:hover,
+.popover-region-mdocs .tool-mdocs-help-item:focus {
+    background-color: rgba(0, 0, 0, 0.04);
+}
+
+.popover-region-mdocs .tool-mdocs-others-toggle::before {
+    content: "\25B8"; /* right-pointing triangle */
+    display: inline-block;
+    margin-right: 0.35rem;
+}
+
+.popover-region-mdocs .tool-mdocs-others-toggle[aria-expanded="true"]::before {
+    content: "\25BE"; /* down-pointing triangle */
+}
+
+.popover-region-mdocs .tool-mdocs-help-doc {
+    overflow-wrap: break-word;
+}
+
+.popover-region-mdocs .tool-mdocs-help-doc img {
+    max-width: 100%;
+    height: auto;
+}
