@@ -52,19 +52,8 @@ if ($hassiteconfig || has_capability('tool/mdocs:view', context_system::instance
             ''
         ));
 
-        // Which .md files to include.
-        $settingspage->add(new admin_setting_configselect(
-            'tool_mdocs/inclusionmode',
-            get_string('inclusionmode', 'tool_mdocs'),
-            get_string('inclusionmode_desc', 'tool_mdocs'),
-            \tool_mdocs\settings_helper::MODE_FOLDERS,
-            [
-                \tool_mdocs\settings_helper::MODE_ALL       => get_string('inclusionmode_all', 'tool_mdocs'),
-                \tool_mdocs\settings_helper::MODE_FOLDERS   => get_string('inclusionmode_folders', 'tool_mdocs'),
-                \tool_mdocs\settings_helper::MODE_FILENAMES => get_string('inclusionmode_filenames', 'tool_mdocs'),
-            ]
-        ));
-
+        // Which .md files to include. The folder list and the file-name list are
+        // both applied, and the exclusion list then takes things back out again.
         $settingspage->add(new admin_setting_configtextarea(
             'tool_mdocs/includefolders',
             get_string('includefolders', 'tool_mdocs'),
@@ -83,6 +72,23 @@ if ($hassiteconfig || has_capability('tool/mdocs:view', context_system::instance
             PARAM_RAW,
             40,
             5
+        ));
+
+        $settingspage->add(new admin_setting_configtextarea(
+            'tool_mdocs/excludenames',
+            get_string('excludenames', 'tool_mdocs'),
+            get_string('excludenames_desc', 'tool_mdocs'),
+            '',
+            PARAM_RAW,
+            40,
+            5
+        ));
+
+        $settingspage->add(new admin_setting_configcheckbox(
+            'tool_mdocs/includeall',
+            get_string('includeall', 'tool_mdocs'),
+            get_string('includeall_desc', 'tool_mdocs'),
+            0
         ));
 
         $settingspage->add(new admin_setting_configcheckbox(

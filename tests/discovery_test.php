@@ -53,39 +53,94 @@ final class discovery_test extends \advanced_testcase {
     }
 
     /**
-     * Folders mode should include only files inside the configured folders.
+     * With only a folder list, nothing outside those folders is indexed.
      *
      * @return void
      */
-    public function test_folders_mode_includes_only_configured_folders(): void {
+    public function test_folder_list_includes_only_configured_folders(): void {
         $this->resetAfterTest();
-        set_config('inclusionmode', settings_helper::MODE_FOLDERS, 'tool_mdocs');
+        set_config('includefilenames', '', 'tool_mdocs');
         set_config('includefolders', 'docs', 'tool_mdocs');
 
         $this->assertEquals(['docs/guide.md', 'docs/teacher-guide.md'], $this->scan());
     }
 
     /**
-     * Filenames mode should include only files with a configured basename.
+     * With only a file-name list, nothing but those names is indexed.
      *
      * @return void
      */
-    public function test_filenames_mode_includes_only_configured_basenames(): void {
+    public function test_filename_list_includes_only_configured_basenames(): void {
         $this->resetAfterTest();
-        set_config('inclusionmode', settings_helper::MODE_FILENAMES, 'tool_mdocs');
+        set_config('includefolders', '', 'tool_mdocs');
         set_config('includefilenames', 'readme.md', 'tool_mdocs');
 
         $this->assertEquals(['readme.md'], $this->scan());
     }
 
     /**
-     * All mode should index every Markdown file but never descend into vendor/.
+     * The two lists add up: a file is indexed when it matches either of them.
+     *
+     * This is the rule an administrator actually wants to express — "everything
+     * in docs, and also readme.md and changes.md" — which used to be impossible
+     * because the two lists were a choice rather than a sum.
      *
      * @return void
      */
-    public function test_all_mode_includes_every_markdown_but_prunes_vendor(): void {
+    public function test_folder_and_filename_lists_add_up(): void {
         $this->resetAfterTest();
-        set_config('inclusionmode', settings_helper::MODE_ALL, 'tool_mdocs');
+        set_config('includefolders', 'docs', 'tool_mdocs');
+        set_config('includefilenames', "readme.md\nchanges.md", 'tool_mdocs');
+
+        $paths = $this->scan();
+
+        $this->assertContains('docs/guide.md', $paths);
+        $this->assertContains('readme.md', $paths);
+        $this->assertContains('CHANGES.md', $paths);
+        // Matched by neither list.
+        $this->assertNotContains('examples/tips.md', $paths);
+    }
+
+    /**
+     * Exclusion wins over both lists, and over "include everything".
+     *
+     * A name is matched against the file itself and against every folder in its
+     * path, so one unwanted file no longer forces the rules to be narrowed for
+     * all the others.
+     *
+     * @return void
+     */
+    public function test_exclusion_beats_every_inclusion_rule(): void {
+        $this->resetAfterTest();
+        set_config('includefolders', 'docs', 'tool_mdocs');
+        set_config('includefilenames', "readme.md\ninstall.md", 'tool_mdocs');
+        set_config('excludenames', "install.md\nexamples", 'tool_mdocs');
+
+        $paths = $this->scan();
+
+        $this->assertContains('readme.md', $paths);
+        $this->assertContains('docs/guide.md', $paths);
+        // Excluded by its own name, even though the file-name list asks for it.
+        $this->assertNotContains('INSTALL.md', $paths);
+        // Excluded by the folder it sits in.
+        $this->assertNotContains('examples/tips.md', $paths);
+
+        // Even "index everything" does not overrule an exclusion.
+        set_config('includeall', 1, 'tool_mdocs');
+        $paths = $this->scan();
+        $this->assertContains('CHANGES.md', $paths);
+        $this->assertNotContains('INSTALL.md', $paths);
+        $this->assertNotContains('examples/tips.md', $paths);
+    }
+
+    /**
+     * Including everything indexes every Markdown file but never descends into vendor/.
+     *
+     * @return void
+     */
+    public function test_include_all_includes_every_markdown_but_prunes_vendor(): void {
+        $this->resetAfterTest();
+        set_config('includeall', 1, 'tool_mdocs');
 
         $paths = $this->scan();
         $this->assertContains('readme.md', $paths);
@@ -102,7 +157,7 @@ final class discovery_test extends \advanced_testcase {
      */
     public function test_title_is_extracted_from_first_heading(): void {
         $this->resetAfterTest();
-        set_config('inclusionmode', settings_helper::MODE_ALL, 'tool_mdocs');
+        set_config('includeall', 1, 'tool_mdocs');
 
         $discovery = new discovery();
         $docs = $discovery->scan_component('fixture_sample', 'fixture', $this->fixture_dir());
@@ -122,7 +177,7 @@ final class discovery_test extends \advanced_testcase {
      */
     public function test_docid_is_stable_and_component_relative(): void {
         $this->resetAfterTest();
-        set_config('inclusionmode', settings_helper::MODE_ALL, 'tool_mdocs');
+        set_config('includeall', 1, 'tool_mdocs');
 
         $discovery = new discovery();
         $docs = $discovery->scan_component('fixture_sample', 'fixture', $this->fixture_dir());
@@ -139,7 +194,7 @@ final class discovery_test extends \advanced_testcase {
      */
     public function test_document_content_is_captured_as_plain_text(): void {
         $this->resetAfterTest();
-        set_config('inclusionmode', settings_helper::MODE_ALL, 'tool_mdocs');
+        set_config('includeall', 1, 'tool_mdocs');
 
         $discovery = new discovery();
         $bypath = [];
@@ -163,7 +218,7 @@ final class discovery_test extends \advanced_testcase {
      */
     public function test_nested_component_directories_are_excluded(): void {
         $this->resetAfterTest();
-        set_config('inclusionmode', settings_helper::MODE_ALL, 'tool_mdocs');
+        set_config('includeall', 1, 'tool_mdocs');
 
         $discovery = new discovery();
         $nesteddir = realpath($this->fixture_dir() . '/plugin/sub');
@@ -192,7 +247,7 @@ final class discovery_test extends \advanced_testcase {
      */
     public function test_is_included_matches_path_segments_not_substrings(): void {
         $this->resetAfterTest();
-        set_config('inclusionmode', settings_helper::MODE_FOLDERS, 'tool_mdocs');
+        set_config('includefilenames', '', 'tool_mdocs');
         set_config('includefolders', 'docs', 'tool_mdocs');
 
         $discovery = new discovery();
@@ -212,7 +267,7 @@ final class discovery_test extends \advanced_testcase {
      */
     public function test_front_matter_never_leaks_into_the_document(): void {
         $this->resetAfterTest();
-        set_config('inclusionmode', settings_helper::MODE_ALL, 'tool_mdocs');
+        set_config('includeall', 1, 'tool_mdocs');
 
         $discovery = new discovery();
         $bypath = [];
@@ -235,7 +290,7 @@ final class discovery_test extends \advanced_testcase {
      */
     public function test_front_matter_overrides_the_guess(): void {
         $this->resetAfterTest();
-        set_config('inclusionmode', settings_helper::MODE_ALL, 'tool_mdocs');
+        set_config('includeall', 1, 'tool_mdocs');
 
         $discovery = new discovery();
         $bypath = [];

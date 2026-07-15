@@ -115,5 +115,34 @@ function xmldb_tool_mdocs_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026071500, 'tool', 'mdocs');
     }
 
+    if ($oldversion < 2026071600) {
+        // The inclusion rules used to be a choice: folders, or file names, or
+        // everything. They now add up, and an exclusion list overrides them.
+        //
+        // Preserve what each site was actually getting, rather than what its
+        // settings now happen to say. Under the old rules a site in "folders" mode
+        // still had readme.md sitting in the file-name setting, ignored; leaving it
+        // there would silently start indexing every readme on the site the moment
+        // the lists began to add up.
+        $mode = get_config('tool_mdocs', 'inclusionmode');
+
+        if ($mode === 'all') {
+            set_config('includeall', 1, 'tool_mdocs');
+        } else if ($mode === 'folders') {
+            // Folders only: the file names were being ignored, so empty them.
+            set_config('includefilenames', '', 'tool_mdocs');
+        } else if ($mode === 'filenames') {
+            // File names only: the folders were being ignored, so empty them.
+            set_config('includefolders', '', 'tool_mdocs');
+        }
+
+        unset_config('inclusionmode', 'tool_mdocs');
+
+        // The rules have changed shape, so the catalogue has to be built again.
+        unset_config('lastsettingshash', 'tool_mdocs');
+
+        upgrade_plugin_savepoint(true, 2026071600, 'tool', 'mdocs');
+    }
+
     return true;
 }

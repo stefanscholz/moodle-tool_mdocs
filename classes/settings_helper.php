@@ -25,45 +25,62 @@
 namespace tool_mdocs;
 
 /**
- * Helper for reading the plugin's inclusion-rule settings.
+ * Helper for reading the rules that decide which files are indexed.
+ *
+ * The rules add up rather than compete. A folder list and a file-name list are
+ * both included, so "everything in docs, and also readme.md and changes.md" is
+ * one setting each and not a choice between them. An exclusion list then takes
+ * things back out again, and it always wins — there was previously no way at all
+ * to say "never this one", which meant a single unwanted file forced you to
+ * narrow the rules for everything else.
  */
 class settings_helper {
-    /** @var string Include every Markdown file. */
-    const MODE_ALL = 'all';
+    /** @var string[] Folders indexed when the setting has never been touched. */
+    const DEFAULT_FOLDERS = ['docs'];
 
-    /** @var string Include only files inside configured folders. */
-    const MODE_FOLDERS = 'folders';
-
-    /** @var string Include only files with configured basenames. */
-    const MODE_FILENAMES = 'filenames';
+    /** @var string[] File names indexed when the setting has never been touched. */
+    const DEFAULT_FILENAMES = ['readme.md', 'index.md'];
 
     /**
-     * Get the configured inclusion mode.
+     * Whether every Markdown file is indexed, whatever the lists say.
      *
-     * @return string one of the MODE_* constants
+     * Exclusions still apply: "everything except" is the whole point of having
+     * them.
+     *
+     * @return bool
      */
-    public static function get_mode(): string {
-        $mode = get_config('tool_mdocs', 'inclusionmode');
-        $valid = [self::MODE_ALL, self::MODE_FOLDERS, self::MODE_FILENAMES];
-        return in_array($mode, $valid, true) ? $mode : self::MODE_FOLDERS;
+    public static function include_all(): bool {
+        return (bool) get_config('tool_mdocs', 'includeall');
     }
 
     /**
-     * Get the configured folder names (lower-cased), used in MODE_FOLDERS.
+     * The folders whose contents are indexed.
      *
-     * @return string[] folder name segments
+     * @return string[] folder name segments, lower-cased
      */
     public static function get_folders(): array {
-        return self::parse_lines((string) get_config('tool_mdocs', 'includefolders'), ['docs']);
+        return self::get_list('includefolders', self::DEFAULT_FOLDERS);
     }
 
     /**
-     * Get the configured file names (lower-cased), used in MODE_FILENAMES.
+     * The file names that are indexed wherever they are found.
      *
-     * @return string[] basenames
+     * @return string[] basenames, lower-cased
      */
     public static function get_filenames(): array {
-        return self::parse_lines((string) get_config('tool_mdocs', 'includefilenames'), ['readme.md', 'index.md']);
+        return self::get_list('includefilenames', self::DEFAULT_FILENAMES);
+    }
+
+    /**
+     * The names that are never indexed, whatever else says otherwise.
+     *
+     * A line is matched against the file's own name and against every folder in
+     * its path, so "install.md" and "examples" both do what they look like they do.
+     *
+     * @return string[] names, lower-cased
+     */
+    public static function get_excluded(): array {
+        return self::get_list('excludenames', []);
     }
 
     /**
@@ -96,23 +113,44 @@ class settings_helper {
      */
     public static function signature(): string {
         return sha1(json_encode([
-            self::get_mode(),
+            self::include_all(),
             self::get_folders(),
             self::get_filenames(),
+            self::get_excluded(),
             self::scan_core(),
             self::get_max_filesize(),
         ]));
     }
 
     /**
-     * Split a textarea setting into a clean, lower-cased, de-duplicated list.
+     * Read one of the textarea settings.
+     *
+     * An empty list and an unset setting are different things: a setting that has
+     * been deliberately emptied means "none of these", and must not quietly fall
+     * back to the default it was cleared of.
+     *
+     * @param string $name the setting name
+     * @param string[] $default used only when the setting has never been saved
+     * @return string[] lower-cased, de-duplicated, in the order they were written
+     */
+    protected static function get_list(string $name, array $default): array {
+        $raw = get_config('tool_mdocs', $name);
+        if ($raw === false) {
+            return $default;
+        }
+
+        return self::parse_lines((string) $raw);
+    }
+
+    /**
+     * Split a textarea value into a clean list.
      *
      * @param string $raw the raw textarea value
-     * @param string[] $default returned when the setting is empty
      * @return string[]
      */
-    protected static function parse_lines(string $raw, array $default): array {
-        $lines = preg_split('/[\r\n]+/', $raw) ?: [];
+    protected static function parse_lines(string $raw): array {
+        $lines = preg_split('/[\r\n,]+/', $raw) ?: [];
+
         $out = [];
         foreach ($lines as $line) {
             $line = trim(\core_text::strtolower($line));
@@ -120,7 +158,7 @@ class settings_helper {
                 $out[$line] = true;
             }
         }
-        $out = array_keys($out);
-        return empty($out) ? $default : $out;
+
+        return array_keys($out);
     }
 }
