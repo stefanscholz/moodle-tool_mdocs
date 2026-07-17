@@ -165,16 +165,9 @@
     margin-bottom: 0;
 }
 
-/* The help icon in the navbar, and the documents behind it. */
-.popover-region-mdocs .tool-mdocs-help-count {
-    position: absolute;
-    top: 0.15rem;
-    right: 0.15rem;
-    font-size: 0.65rem;
-    line-height: 1;
-    padding: 0.15rem 0.3rem;
-}
-
+/* The help icon in the navbar, and the documents behind it. The count badge
+   is core's .count-container, so it sits and sizes like the notification
+   bell's; only its colour is ours (bg-primary in the template). */
 .popover-region-mdocs .tool-mdocs-help-item:hover,
 .popover-region-mdocs .tool-mdocs-help-item:focus {
     background-color: rgba(0, 0, 0, 0.04);

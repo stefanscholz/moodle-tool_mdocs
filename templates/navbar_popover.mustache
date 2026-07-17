@@ -67,7 +67,14 @@
     {{$togglelabel}}{{#str}} helpforthispage, tool_mdocs {{/str}}{{/togglelabel}}
     {{$togglecontent}}
         <i class="fa fa-book" aria-hidden="true"></i>
-        <span class="badge bg-primary text-white tool-mdocs-help-count">{{count}}</span>
+        {{!
+            The same count as the notification bell's, in shape and place, so the
+            navbar counts read as one family. Only the colour stays our own: it is
+            a "there is help here", not a "something needs you". The toggle takes
+            its accessible name from its label, which already swallows the text
+            content, so the number is hidden from assistive tech as core does.
+        }}
+        <div class="count-container bg-primary text-white tool-mdocs-help-count" aria-hidden="true">{{count}}</div>
     {{/togglecontent}}
     {{$containerrole}}dialog{{/containerrole}}
     {{$containerlabel}}{{#str}} helpforthispage, tool_mdocs {{/str}}{{/containerlabel}}
