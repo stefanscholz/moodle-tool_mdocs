@@ -251,15 +251,17 @@
 }
 
 /* On a phone there is nowhere to move it to, so it stops pretending to be a
-   window and becomes the bottom half of the screen. */
+   window and fills everything below the navbar instead. */
 @media (max-width: 576px) {
     .tool-mdocs-help-window {
-        top: auto !important; /* stylelint-disable-line declaration-no-important */
+        top: var(--navbar-height, 60px) !important; /* stylelint-disable-line declaration-no-important */
         left: 0 !important; /* stylelint-disable-line declaration-no-important */
         bottom: 0;
         width: 100% !important; /* stylelint-disable-line declaration-no-important */
-        height: 70vh !important; /* stylelint-disable-line declaration-no-important */
-        border-radius: 0.5rem 0.5rem 0 0;
+        height: auto !important; /* stylelint-disable-line declaration-no-important */
+        border-radius: 0;
+        border-right: 0;
+        border-left: 0;
         resize: none;
     }
 
