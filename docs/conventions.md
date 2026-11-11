@@ -83,7 +83,7 @@ edition: Pro
 | `pagetypes` | Which pages it belongs to. `*` matches anything, so `mod-videotime-*` is every Video Time page and `mod-videotime-view` is only the one. Overrides the directory. |
 | `exclude` | `true` keeps the document out of contextual help entirely. It is still in the Documentation Center. |
 | `order` | A whole number that sets the document's place among the documents of its plugin, lowest first, in the sidebar and in contextual help. Without it, documents are listed by title. |
-| `edition` | The edition the whole document needs, such as `Pro`. Shown as a pill above the title. Write it as it is sold; the first sentence of the document should say it as well. |
+| `edition` | The edition the whole document needs, such as `Pro`. Shown as a pill next to the title, and announced with the title by screen readers. Write it as it is sold. |
 
 Anything else in the block is ignored, and a mistake in it costs you the hint, not
 the document.

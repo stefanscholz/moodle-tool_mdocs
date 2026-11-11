@@ -190,6 +190,13 @@
     border-radius: 1rem;
 }
 
+.tool-mdocs-pill-title {
+    margin-left: 0.4em;
+    padding: 0.15em 0.7em;
+    font-size: 0.45em;
+    vertical-align: middle;
+}
+
 .tool-mdocs-pill-inline {
     padding: 0 0.5em;
     font-size: 0.75em;

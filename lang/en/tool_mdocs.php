@@ -42,6 +42,7 @@ $string['documentcount'] = '{$a} document(s)';
 $string['documentnotfound'] = 'The requested document could not be found. It may have been removed; try rebuilding the index.';
 $string['draft'] = 'Draft (hidden)';
 $string['draftbadge'] = 'Draft';
+$string['editionlabel'] = '{$a} edition';
 $string['editorbold'] = 'Bold';
 $string['editorbulletlist'] = 'Bulleted list';
 $string['editorcode'] = 'Code';

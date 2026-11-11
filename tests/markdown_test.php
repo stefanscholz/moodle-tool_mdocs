@@ -276,15 +276,20 @@ final class markdown_test extends \advanced_testcase {
     }
 
     /**
-     * The edition from the front matter is shown above the title, escaped.
+     * The edition from the front matter is shown next to the title, with a full label for screen readers.
      *
      * @return void
      */
-    public function test_edition_pill_above_the_title(): void {
-        $this->assertSame('', markdown::edition_pill(''));
-        $expected = '<p class="tool-mdocs-edition"><span class="tool-mdocs-pill">Pro</span></p>';
-        $this->assertSame($expected, markdown::edition_pill('Pro'));
-        $this->assertStringNotContainsString('<b>', markdown::edition_pill('<b>Pro</b>'));
+    public function test_edition_pill_next_to_the_title(): void {
+        $this->assertSame('<h1>Title</h1>', markdown::add_edition_pill('<h1>Title</h1>', ''));
+
+        $html = markdown::add_edition_pill('<h1 id="t">Title</h1><p>Body</p>', 'Pro');
+        $this->assertStringStartsWith('<h1 id="t">Title <span class="tool-mdocs-pill tool-mdocs-pill-title" '
+            . 'aria-hidden="true">Pro</span><span class="tool-mdocs-sr"> (Pro edition)</span></h1>', $html);
+
+        $html = markdown::add_edition_pill('<p>No title</p>', 'Pro');
+        $this->assertStringStartsWith('<p class="tool-mdocs-edition"><span', $html);
+        $this->assertStringNotContainsString('<b>', markdown::add_edition_pill('<h1>T</h1>', '<b>Pro</b>'));
 
         [$meta] = front_matter::split("---\nedition: Pro\n---\n\n# Title\n");
         $this->assertSame('Pro', front_matter::edition($meta));

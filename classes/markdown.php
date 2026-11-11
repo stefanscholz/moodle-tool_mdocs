@@ -37,7 +37,9 @@ class markdown {
      */
     public static function render(\stdClass $doc, \context $context): array {
         $cache = \cache::make('tool_mdocs', 'rendered');
-        $key = $doc->docid . '_' . $doc->timemodified;
+        // The edition pill carries a translated label for screen readers, so the
+        // rendering depends on the language too.
+        $key = $doc->docid . '_' . $doc->timemodified . '_' . current_language();
         $cached = $cache->get($key);
         if ($cached !== false) {
             return $cached;
@@ -50,7 +52,7 @@ class markdown {
         [$meta, $body] = front_matter::split($raw);
 
         $result = self::process($body, $doc->component, $doc->relpath, $context);
-        $result['html'] = self::edition_pill(front_matter::edition($meta)) . $result['html'];
+        $result['html'] = self::add_edition_pill($result['html'], front_matter::edition($meta));
 
         $cache->set($key, $result);
         return $result;
@@ -257,16 +259,30 @@ class markdown {
     const CALLOUTS = ['Note:' => 'note', 'Important:' => 'important', 'Tip:' => 'tip'];
 
     /**
-     * The pill shown above a document's title for the edition it needs.
+     * Show the edition a document needs as a pill next to its title.
      *
+     * The pill is inside the level-one heading, so a screen reader announces it
+     * with the title ("Activity skills (Pro edition)"); the visible pill itself is
+     * hidden from screen readers, which read the full label instead. Without a
+     * level-one heading, the pill goes above the document.
+     *
+     * @param string $html the rendered document
      * @param string $edition the edition from the front matter, '' for none
-     * @return string HTML, empty when there is no edition
+     * @return string the document with the pill
      */
-    public static function edition_pill(string $edition): string {
+    public static function add_edition_pill(string $html, string $edition): string {
         if ($edition === '') {
-            return '';
+            return $html;
         }
-        return '<p class="tool-mdocs-edition"><span class="tool-mdocs-pill">' . s($edition) . '</span></p>';
+        $pill = ' <span class="tool-mdocs-pill tool-mdocs-pill-title" aria-hidden="true">' . s($edition) . '</span>'
+            . '<span class="tool-mdocs-sr"> (' . s(get_string('editionlabel', 'tool_mdocs', $edition)) . ')</span>';
+
+        $count = 0;
+        $html = preg_replace('~</h1>~', $pill . '</h1>', $html, 1, $count);
+        if ($count === 0) {
+            $html = '<p class="tool-mdocs-edition">' . trim($pill) . '</p>' . $html;
+        }
+        return $html;
     }
 
     /**
