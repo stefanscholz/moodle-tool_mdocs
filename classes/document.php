@@ -55,6 +55,9 @@ class document {
     /** @var string[] Audiences this document is written for. */
     public array $audiences;
 
+    /** @var int Position among its siblings, from the "order" front matter key. */
+    public int $sortorder;
+
     /** @var int File modification time. */
     public int $timemodified;
 
@@ -73,6 +76,7 @@ class document {
      * @param string $content plain-text body for full-text search
      * @param string[] $pagetypes pagetype patterns for contextual help
      * @param string[] $audiences audiences the document is written for
+     * @param int $sortorder position among its siblings, lowest first
      */
     public function __construct(
         string $component,
@@ -83,7 +87,8 @@ class document {
         int $filesize,
         string $content = '',
         array $pagetypes = [],
-        array $audiences = []
+        array $audiences = [],
+        int $sortorder = 0
     ) {
         $this->component = $component;
         $this->plugintype = $plugintype;
@@ -93,6 +98,7 @@ class document {
         $this->content = $content;
         $this->pagetypes = $pagetypes;
         $this->audiences = $audiences;
+        $this->sortorder = $sortorder;
         $this->timemodified = $timemodified;
         $this->filesize = $filesize;
         $this->docid = self::make_docid($component, $relpath);
@@ -125,7 +131,7 @@ class document {
         $record->content = $this->content;
         $record->pagetypes = $this->pagetypes ? implode(',', $this->pagetypes) : null;
         $record->audience = $this->audiences ? implode(',', $this->audiences) : null;
-        $record->sortorder = 0;
+        $record->sortorder = $this->sortorder;
         $record->filesize = $this->filesize;
         $record->timemodified = $this->timemodified;
         return $record;

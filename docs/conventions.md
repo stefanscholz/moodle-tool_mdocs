@@ -70,6 +70,7 @@ audience: teacher, manager
 pagetypes:
   - mod-videotime-view
 exclude: false
+order: 20
 ---
 
 # Watching a video
@@ -80,6 +81,7 @@ exclude: false
 | `audience` | Who it is for: `admin`, `manager`, `teacher`, `student`, `developer`, `any`. Several are allowed. Overrides the file name. |
 | `pagetypes` | Which pages it belongs to. `*` matches anything, so `mod-videotime-*` is every Video Time page and `mod-videotime-view` is only the one. Overrides the directory. |
 | `exclude` | `true` keeps the document out of contextual help entirely. It is still in the Documentation Center. |
+| `order` | A whole number that sets the document's place among the documents of its plugin, lowest first, in the sidebar and in contextual help. Without it, documents are listed by title. |
 
 Anything else in the block is ignored, and a mistake in it costs you the hint, not
 the document.

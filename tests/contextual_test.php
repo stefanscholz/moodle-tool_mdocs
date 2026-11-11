@@ -38,6 +38,7 @@ final class contextual_test extends \advanced_testcase {
      * @param string $title its title
      * @param string $audience who it is written for
      * @param string $pagetype the page it belongs to
+     * @param int $sortorder its declared position
      * @return void
      */
     protected function index(
@@ -45,7 +46,8 @@ final class contextual_test extends \advanced_testcase {
         string $component,
         string $title,
         string $audience,
-        string $pagetype
+        string $pagetype,
+        int $sortorder = 0
     ): void {
         global $DB;
 
@@ -59,7 +61,7 @@ final class contextual_test extends \advanced_testcase {
             'content'      => '',
             'audience'     => $audience,
             'pagetypes'    => $pagetype,
-            'sortorder'    => 0,
+            'sortorder'    => $sortorder,
             'filesize'     => 0,
             'timemodified' => 0,
             'timecreated'  => 0,
@@ -256,5 +258,25 @@ final class contextual_test extends \advanced_testcase {
 
         $this->expectException(\moodle_exception::class);
         contextual::read(index_manager::SOURCE_FILE, 'nosuchdocument');
+    }
+
+    /**
+     * Within one page match, the order the documents declare beats their titles.
+     *
+     * @return void
+     */
+    public function test_declared_order_beats_the_title(): void {
+        $this->resetAfterTest();
+
+        $course = $this->getDataGenerator()->create_course();
+        $context = \context_course::instance($course->id);
+
+        $this->index('cap', 'mod_assign', 'Capabilities', targeting::AUDIENCE_ANY, 'mod-assign-*', 90);
+        $this->index('start', 'mod_assign', 'Getting started', targeting::AUDIENCE_ANY, 'mod-assign-*', 10);
+
+        $this->setAdminUser();
+
+        $titles = array_column(contextual::for_page('mod-assign-view', $context)['foryou'], 'title');
+        $this->assertSame(['Getting started', 'Capabilities'], $titles);
     }
 }

@@ -222,7 +222,8 @@ class discovery {
             $filesize,
             self::to_plain_text($body),
             $this->resolve_pagetypes($meta, $component),
-            $this->resolve_audiences($meta, $relpath)
+            $this->resolve_audiences($meta, $relpath),
+            front_matter::order($meta)
         );
     }
 

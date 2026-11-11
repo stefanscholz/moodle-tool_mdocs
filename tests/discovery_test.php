@@ -304,5 +304,7 @@ final class discovery_test extends \advanced_testcase {
         // Declared explicitly, so the mod-videotime-* the component would have
         // guessed does not apply.
         $this->assertSame(['mod-videotime-view'], $doc->pagetypes);
+        $this->assertSame(20, $doc->sortorder);
+        $this->assertSame(20, $doc->to_record()->sortorder);
     }
 }

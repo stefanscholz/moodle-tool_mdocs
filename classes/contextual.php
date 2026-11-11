@@ -171,7 +171,7 @@ class contextual {
         [$insql, $params] = $DB->get_in_or_equal($patterns, SQL_PARAMS_NAMED, 'pt');
 
         // Documents inside plugins.
-        $sql = "SELECT t.pagetype, i.docid, i.title, i.component, i.audience
+        $sql = "SELECT t.pagetype, i.docid, i.title, i.component, i.audience, i.sortorder
                   FROM {" . index_manager::TARGET_TABLE . "} t
                   JOIN {" . index_manager::TABLE . "} i ON i.docid = t.sourceid
                  WHERE t.source = :source AND t.pagetype $insql";
@@ -186,12 +186,13 @@ class contextual {
                 'component' => $row->component,
                 'audiences' => self::split($row->audience),
                 'rank'      => $order[$row->pagetype] ?? PHP_INT_MAX,
+                'sortorder' => (int) $row->sortorder,
             ];
         }
 
         // Pages authored on this site. Drafts stay out of contextual help: an
         // unfinished page should not be offered as the answer to anything.
-        $sql = "SELECT t.pagetype, p.id, p.title, p.component, p.audience
+        $sql = "SELECT t.pagetype, p.id, p.title, p.component, p.audience, p.sortorder
                   FROM {" . index_manager::TARGET_TABLE . "} t
                   JOIN {" . page_manager::TABLE . "} p ON " . $DB->sql_cast_to_char('p.id') . " = t.sourceid
                  WHERE t.source = :source AND p.visible = 1 AND t.pagetype $insql";
@@ -205,16 +206,18 @@ class contextual {
                 'component' => (string) ($row->component ?? ''),
                 'audiences' => self::split($row->audience),
                 'rank'      => $order[$row->pagetype] ?? PHP_INT_MAX,
+                'sortorder' => (int) $row->sortorder,
             ];
         }
 
-        // Most specific pattern first; a stable title order within a tie.
+        // Most specific pattern first; within a tie, the order the documents
+        // declare, then their titles.
         usort($candidates, function ($a, $b) {
-            return [$a['rank'], $a['title']] <=> [$b['rank'], $b['title']];
+            return [$a['rank'], $a['sortorder'], $a['title']] <=> [$b['rank'], $b['sortorder'], $b['title']];
         });
 
         foreach ($candidates as &$candidate) {
-            unset($candidate['rank']);
+            unset($candidate['rank'], $candidate['sortorder']);
         }
         unset($candidate);
 

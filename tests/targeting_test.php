@@ -181,4 +181,21 @@ final class targeting_test extends \advanced_testcase {
 
         $this->assertTrue(front_matter::is_excluded($meta));
     }
+
+    /**
+     * A document may say where it goes among its siblings; anything else counts as absent.
+     *
+     * @return void
+     */
+    public function test_a_document_can_declare_its_order(): void {
+        $this->resetAfterTest();
+
+        [$meta] = front_matter::split("---\norder: 20\n---\n\n# Title\n");
+        $this->assertSame(20, front_matter::order($meta));
+
+        [$meta] = front_matter::split("---\norder: first\n---\n\n# Title\n");
+        $this->assertSame(0, front_matter::order($meta));
+
+        $this->assertSame(0, front_matter::order([]));
+    }
 }

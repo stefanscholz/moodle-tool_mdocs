@@ -2,6 +2,7 @@
 audience: teacher
 pagetypes:
   - mod-videotime-view
+order: 20
 ---
 
 # Fixture teacher guide

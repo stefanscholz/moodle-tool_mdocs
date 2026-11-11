@@ -36,6 +36,7 @@ namespace tool_mdocs;
  *       - mod-videotime-view
  *       - mod-videotime-*
  *     exclude: false
+ *     order: 30
  *     ---
  *
  *     # Watching a video
@@ -179,6 +180,23 @@ class front_matter {
         }
 
         return array_keys($values);
+    }
+
+    /**
+     * Where the document sits among its siblings, lowest first.
+     *
+     * Without it, documents are listed by title, which puts "Capabilities" above
+     * "Getting started". Anything that is not a whole number counts as absent.
+     *
+     * @param array $meta the parsed metadata
+     * @return int the declared position, 0 when absent or not a number
+     */
+    public static function order(array $meta): int {
+        $value = $meta['order'] ?? '';
+        if (is_array($value) || !preg_match('/^-?\d{1,6}$/', trim($value))) {
+            return 0;
+        }
+        return (int) trim($value);
     }
 
     /**
