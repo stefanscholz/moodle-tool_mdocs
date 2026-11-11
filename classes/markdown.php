@@ -106,6 +106,7 @@ class markdown {
      * @return array{html: string, toc: array}
      */
     public static function process(string $raw, string $component, string $relpath, \context $context): array {
+        $raw = self::resolve_mdocs_links($raw);
         $html = format_text($raw, FORMAT_MARKDOWN, ['noclean' => false, 'context' => $context]);
         return self::postprocess($html, $component, $relpath);
     }
@@ -243,6 +244,63 @@ class markdown {
             ];
         }
         return $toc;
+    }
+
+    /**
+     * Turn links to documents of other components into viewer links, or into plain text.
+     *
+     * A relative link cannot leave its own component, so a document that points at
+     * another plugin's documentation writes [text](mdocs:component/path.md#anchor),
+     * with the path relative to that component's directory. When the document is
+     * indexed here, the link points at the viewer. When it is not (the plugin is
+     * not installed, or the file is not included), only the link text is kept, so
+     * the reader never meets a dead link.
+     *
+     * This runs on the Markdown source, before format_text(): the output cleaner
+     * does not know the mdocs: scheme and would strip the address from the link.
+     * Code spans and fenced code blocks are left untouched, so documentation can
+     * show the syntax itself.
+     *
+     * @param string $raw Markdown source
+     * @return string Markdown source with every mdocs: link resolved
+     */
+    public static function resolve_mdocs_links(string $raw): string {
+        if (stripos($raw, 'mdocs:') === false) {
+            return $raw;
+        }
+
+        $parts = preg_split('/(^(?:```|~~~)[^\n]*\n.*?^(?:```|~~~)[ \t]*$|`[^`\n]+`)/ms', $raw, -1,
+            PREG_SPLIT_DELIM_CAPTURE);
+        if ($parts === false) {
+            return $raw;
+        }
+
+        $index = new index_manager();
+        $pattern = '/(?<!!)\[((?:[^\[\]]|\[[^\]]*\])*)\]\(\s*<?mdocs:([a-z][a-z0-9_]*)\/([^\s)#>]+)(#[^\s)>]*)?>?' .
+            '(?:\s+"[^"]*")?\s*\)/i';
+        foreach ($parts as $i => $part) {
+            // Odd parts are the code the split kept.
+            if ($i % 2 === 1) {
+                continue;
+            }
+            $parts[$i] = preg_replace_callback($pattern, function ($m) use ($index) {
+                $text = $m[1];
+                $component = clean_param($m[2], PARAM_COMPONENT);
+                $path = self::resolve_relative('', rawurldecode($m[3]));
+                if ($component === '' || $path === null || !preg_match('/\.md$/i', $path)) {
+                    return $text;
+                }
+                $doc = $index->get_document(document::make_docid($component, $path));
+                if ($doc === null) {
+                    return $text;
+                }
+                $url = new \moodle_url('/admin/tool/mdocs/view.php', ['component' => $component, 'doc' => $doc->docid]);
+                $fragment = isset($m[4]) ? preg_replace('/[^A-Za-z0-9_-]/', '', substr($m[4], 1)) : '';
+                return '[' . $text . '](' . $url->out(false) . ($fragment !== '' ? '#' . $fragment : '') . ')';
+            }, $part);
+        }
+
+        return implode('', $parts);
     }
 
     /**

@@ -175,4 +175,67 @@ final class markdown_test extends \advanced_testcase {
         $this->assertStringNotContainsString('<script', $result['html']);
         $this->assertStringContainsString('Safe text.', $result['html']);
     }
+
+    /**
+     * Index one document directly, without touching the filesystem.
+     *
+     * @param string $component the component it belongs to
+     * @param string $relpath its path inside the component
+     * @return string its document id
+     */
+    protected function index_document(string $component, string $relpath): string {
+        global $DB;
+        $docid = document::make_docid($component, $relpath);
+        $DB->insert_record(index_manager::TABLE, (object) [
+            'docid' => $docid, 'component' => $component, 'plugintype' => 'mod', 'relpath' => $relpath,
+            'basename' => basename($relpath), 'title' => 'Target', 'content' => '', 'audience' => 'any',
+            'pagetypes' => null, 'sortorder' => 0, 'filesize' => 0, 'timemodified' => 0, 'timecreated' => 0,
+        ]);
+        return $docid;
+    }
+
+    /**
+     * A link to another component's document points at the viewer when that document is indexed.
+     *
+     * @return void
+     */
+    public function test_mdocs_link_to_an_indexed_document_points_at_the_viewer(): void {
+        $this->resetAfterTest();
+        $docid = $this->index_document('mod_assign', 'docs/grading.md');
+
+        $raw = "# Title\n\nSee [Grading](mdocs:mod_assign/docs/grading.md#rubrics).\n";
+        $result = markdown::process($raw, 'mod_forum', 'docs/readme.md', \context_system::instance());
+
+        $this->assertStringContainsString('view.php', $result['html']);
+        $this->assertStringContainsString($docid, $result['html']);
+        $this->assertStringContainsString('#rubrics', $result['html']);
+        $this->assertStringContainsString('>Grading</a>', $result['html']);
+        $this->assertStringNotContainsString('mdocs:', $result['html']);
+    }
+
+    /**
+     * A link to a document that is not here keeps its text and loses the link.
+     *
+     * @return void
+     */
+    public function test_mdocs_link_to_a_missing_document_becomes_plain_text(): void {
+        $this->resetAfterTest();
+
+        $raw = "# Title\n\nSee [Decay rules](mdocs:skilladdon_decay/docs/rules.md) (Pro).\n";
+        $result = markdown::process($raw, 'tool_skills', 'docs/readme.md', \context_system::instance());
+
+        $this->assertStringContainsString('See Decay rules (Pro).', $result['html']);
+        $this->assertStringNotContainsString('<a', $result['html']);
+        $this->assertStringNotContainsString('mdocs:', $result['html']);
+    }
+
+    /**
+     * Code keeps the syntax as written, so documentation can show it.
+     *
+     * @return void
+     */
+    public function test_mdocs_links_in_code_are_left_alone(): void {
+        $raw = "Write `[text](mdocs:mod_assign/docs/a.md)`.\n\n```\n[text](mdocs:mod_assign/docs/b.md)\n```\n";
+        $this->assertSame($raw, markdown::resolve_mdocs_links($raw));
+    }
 }

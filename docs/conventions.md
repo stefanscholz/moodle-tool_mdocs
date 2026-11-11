@@ -89,6 +89,19 @@ the document.
 The block never reaches the reader: it is taken off before the document is
 indexed, searched or rendered.
 
+## Linking to another plugin's documentation
+
+A relative link such as `[Capabilities](capabilities.md)` stays inside its own plugin. To link
+to a document of another plugin, name that plugin's component and the path inside it:
+
+```markdown
+[Decay rules](mdocs:skilladdon_decay/docs/decay-rules.md#rule-types)
+```
+
+When that document is on the site, the link opens it. When it is not, because the plugin is not
+installed, only the link text is shown, so readers never meet a dead link. Write the text so it
+still makes sense without the link.
+
 ## Two things worth knowing when you write the body
 
 **A list needs a blank line before it.** This is not a list —
