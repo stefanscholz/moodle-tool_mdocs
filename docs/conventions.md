@@ -128,7 +128,9 @@ mod/videotime/plugin/analysis/docs/teacher-guide.md
 No front matter, no configuration. A teacher opening a Video Time activity gets
 the book icon, and behind it the **Analysis — Teacher guide**, with the
 administrator's guide underneath in *Written for other people*. An administrator
-on the same page gets them the other way round.
+on the same page gets both: staff guides add up downwards, so an administrator also
+gets the manager and teacher guides, and a manager the teacher guides. Only the
+student guide stays under *Written for other people* for staff.
 
 That is the whole convention: put the documents in `docs/`, name them after the
 person who needs them, and they turn up where that person is.

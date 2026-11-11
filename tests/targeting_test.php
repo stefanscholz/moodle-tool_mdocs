@@ -98,6 +98,7 @@ final class targeting_test extends \advanced_testcase {
      * @return void
      */
     public function test_a_reader_is_read_as_the_most_senior_thing_they_are(): void {
+        global $DB;
         $this->resetAfterTest();
 
         $course = $this->getDataGenerator()->create_course();
@@ -120,6 +121,18 @@ final class targeting_test extends \advanced_testcase {
         $audiences = targeting::audiences_for_user($context);
         $this->assertContains('admin', $audiences);
         $this->assertContains('developer', $audiences);
+        $this->assertContains('manager', $audiences, 'staff audiences below the reader are theirs too');
+        $this->assertContains('teacher', $audiences, 'staff audiences below the reader are theirs too');
+        $this->assertNotContains('student', $audiences);
+
+        $manager = $this->getDataGenerator()->create_user();
+        $managerroleid = $DB->get_field('role', 'id', ['shortname' => 'manager']);
+        $this->getDataGenerator()->role_assign($managerroleid, $manager->id);
+        $this->setUser($manager);
+        $audiences = targeting::audiences_for_user($context);
+        $this->assertContains('manager', $audiences);
+        $this->assertContains('teacher', $audiences);
+        $this->assertNotContains('admin', $audiences);
         $this->assertNotContains('student', $audiences);
     }
 

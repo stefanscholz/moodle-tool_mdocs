@@ -38,7 +38,8 @@ a document in place, and does not make you go and look for it.
 
 What is written for *you* comes first. A teacher opening a Video Time activity is
 offered the **Analysis — Teacher guide**; an administrator on the same page is
-offered the administrator's guide. The rest is under **Written for other people**,
+offered the administrator's guide and the teacher guide, because an administrator
+setting up a course is doing a teacher's job. The rest is under **Written for other people**,
 because "what is my student being told?" is a fair question and its answer is the
 student guide.
 

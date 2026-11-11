@@ -52,8 +52,11 @@ class targeting {
      * student can, and an administrator can do everything at all — so asking
      * "which of these can you do?" answers "all of them" for anyone senior, and a
      * site administrator would be told that the student guide is written for them.
-     * Only the first match counts, so each person gets the guide for the most
-     * senior thing they are, and the rest stay one click away.
+     * The first match decides how senior the reader is. They then get the guides
+     * for that audience and for every staff audience below it: an administrator
+     * configuring a course is doing a teacher's job at that moment, and a teacher
+     * article is the answer. The student guide is never included this way (see
+     * audiences_for_user()), so it stays one click away for staff.
      *
      * @var array<string, string>
      */
@@ -179,9 +182,11 @@ class targeting {
      * their own course and nowhere else, so the same person is a "teacher" on a
      * course page and nobody in particular on an admin page.
      *
-     * Only the most senior audience is returned, plus everything written for
-     * everyone. See AUDIENCE_CAPABILITIES for why taking all of them would be
-     * useless.
+     * The most senior matching audience is returned together with every staff
+     * audience below it, plus everything written for everyone: an administrator
+     * also gets the manager and teacher guides, a manager the teacher guides.
+     * The learner's audience is only returned for someone who matches none of
+     * the staff audiences, so a teacher is not told the student guide is theirs.
      *
      * @param \context $context the context of the page being viewed
      * @return string[] the audiences that apply, always including 'any'
@@ -189,16 +194,20 @@ class targeting {
     public static function audiences_for_user(\context $context): array {
         $audiences = [self::AUDIENCE_ANY];
 
-        $matched = null;
+        $matched = false;
         foreach (self::AUDIENCE_CAPABILITIES as $audience => $capability) {
-            if (has_capability($capability, $context)) {
-                $matched = $audience;
-                break;
+            // Once the reader matched, every audience below is theirs too. The
+            // order of AUDIENCE_CAPABILITIES is what makes "below" meaningful.
+            if ($matched || has_capability($capability, $context)) {
+                $matched = true;
+                $audiences[] = $audience;
             }
         }
 
         // Nobody in particular here, so read as a learner would.
-        $audiences[] = $matched ?? self::AUDIENCE_FALLBACK;
+        if (!$matched) {
+            $audiences[] = self::AUDIENCE_FALLBACK;
+        }
 
         // Developer documentation is for people reading the code, and on a Moodle
         // site the people who do that are its administrators.

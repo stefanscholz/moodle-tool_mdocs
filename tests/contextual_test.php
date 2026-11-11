@@ -279,4 +279,25 @@ final class contextual_test extends \advanced_testcase {
         $titles = array_column(contextual::for_page('mod-assign-view', $context)['foryou'], 'title');
         $this->assertSame(['Getting started', 'Capabilities'], $titles);
     }
+
+    /**
+     * An administrator on a course page is doing a teacher's job, and gets the teacher guide.
+     *
+     * @return void
+     */
+    public function test_an_administrator_also_gets_the_teacher_guide(): void {
+        $this->resetAfterTest();
+
+        $course = $this->getDataGenerator()->create_course();
+        $context = \context_course::instance($course->id);
+
+        $this->index('t', 'mod_assign', 'Teacher guide', 'teacher', 'mod-assign-*');
+        $this->index('s', 'mod_assign', 'Student guide', 'student', 'mod-assign-*');
+
+        $this->setAdminUser();
+        $matches = contextual::for_page('mod-assign-view', $context);
+
+        $this->assertSame(['Teacher guide'], array_column($matches['foryou'], 'title'));
+        $this->assertSame(['Student guide'], array_column($matches['others'], 'title'));
+    }
 }
