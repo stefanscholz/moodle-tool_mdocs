@@ -37,6 +37,7 @@ namespace tool_mdocs;
  *       - mod-videotime-*
  *     exclude: false
  *     order: 30
+ *     edition: Pro
  *     ---
  *
  *     # Watching a video
@@ -197,6 +198,24 @@ class front_matter {
             return 0;
         }
         return (int) trim($value);
+    }
+
+    /**
+     * The edition the whole document needs, shown as a pill above its title.
+     *
+     * Written as sold ("Pro"), so the case is kept. Only a short single value
+     * counts; anything else is ignored rather than shown.
+     *
+     * @param array $meta the parsed metadata
+     * @return string the edition, '' when absent
+     */
+    public static function edition(array $meta): string {
+        $value = $meta['edition'] ?? '';
+        if (is_array($value)) {
+            return '';
+        }
+        $value = trim($value);
+        return \core_text::strlen($value) <= 30 ? $value : '';
     }
 
     /**

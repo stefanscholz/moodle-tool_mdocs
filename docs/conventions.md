@@ -71,6 +71,7 @@ pagetypes:
   - mod-videotime-view
 exclude: false
 order: 20
+edition: Pro
 ---
 
 # Watching a video
@@ -82,6 +83,7 @@ order: 20
 | `pagetypes` | Which pages it belongs to. `*` matches anything, so `mod-videotime-*` is every Video Time page and `mod-videotime-view` is only the one. Overrides the directory. |
 | `exclude` | `true` keeps the document out of contextual help entirely. It is still in the Documentation Center. |
 | `order` | A whole number that sets the document's place among the documents of its plugin, lowest first, in the sidebar and in contextual help. Without it, documents are listed by title. |
+| `edition` | The edition the whole document needs, such as `Pro`. Shown as a pill above the title. Write it as it is sold; the first sentence of the document should say it as well. |
 
 Anything else in the block is ignored, and a mistake in it costs you the hint, not
 the document.
@@ -101,6 +103,17 @@ to a document of another plugin, name that plugin's component and the path insid
 When that document is on the site, the link opens it. When it is not, because the plugin is not
 installed, only the link text is shown, so readers never meet a dead link. Write the text so it
 still makes sense without the link.
+
+## Editions, callouts and tables
+
+- **A single setting that needs a higher edition:** write the edition in parentheses right after
+  the bold label, `**Mode** (Pro)`. It is shown as a small pill. This works for `Plus`, `Pro` and
+  `Premium`, and only directly after bold text.
+- **Callouts:** a quote that starts with a bold `Note:`, `Important:` or `Tip:` is shown as a
+  coloured box, for example `> **Note:** Changes apply to new attempts only.` The label stays in the
+  text, so the meaning does not depend on the colour.
+- **Tables:** put a heading above each table. A wide table scrolls in a box that is named after that
+  heading and can be scrolled with the keyboard.
 
 ## Two things worth knowing when you write the body
 

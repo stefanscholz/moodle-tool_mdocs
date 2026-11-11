@@ -235,7 +235,78 @@ final class markdown_test extends \advanced_testcase {
      * @return void
      */
     public function test_mdocs_links_in_code_are_left_alone(): void {
-        $raw = "Write `[text](mdocs:mod_assign/docs/a.md)`.\n\n```\n[text](mdocs:mod_assign/docs/b.md)\n```\n";
+        // A code span and a fenced block; \x60 is the backtick.
+        $raw = "Write \x60[text](mdocs:mod_assign/docs/a.md)\x60.\n\n"
+            . "\x60\x60\x60\n[text](mdocs:mod_assign/docs/b.md)\n\x60\x60\x60\n";
         $this->assertSame($raw, markdown::resolve_mdocs_links($raw));
+    }
+
+    /**
+     * A table scrolls in a focusable container named after the heading above it.
+     *
+     * @return void
+     */
+    public function test_tables_are_wrapped_in_a_named_scroll_container(): void {
+        $this->resetAfterTest();
+
+        $raw = "# Title\n\n## General settings\n\n| Setting | Default |\n| --- | --- |\n| Mode | Off |\n";
+        $html = markdown::process($raw, 'mod_forum', 'docs/a.md', \context_system::instance())['html'];
+
+        $this->assertMatchesRegularExpression(
+            '~<div class="tool-mdocs-table" tabindex="0" role="region" aria-labelledby="general-settings"><table~',
+            $html
+        );
+    }
+
+    /**
+     * "**Label** (Pro)" becomes a pill; other parentheses are left alone.
+     *
+     * @return void
+     */
+    public function test_edition_after_a_bold_label_becomes_a_pill(): void {
+        $this->resetAfterTest();
+
+        $raw = "# Title\n\n**Mode** (Pro) sets the mode. **Size** (in pixels) is not an edition.\n";
+        $html = markdown::process($raw, 'mod_forum', 'docs/a.md', \context_system::instance())['html'];
+
+        $this->assertStringContainsString('<strong>Mode</strong> <span class="tool-mdocs-pill tool-mdocs-pill-inline">'
+            . '<span class="tool-mdocs-sr">(</span>Pro<span class="tool-mdocs-sr">)</span></span> sets the mode.', $html);
+        $this->assertStringContainsString('<strong>Size</strong> (in pixels)', $html);
+        $this->assertSame(1, substr_count($html, 'tool-mdocs-pill-inline'));
+    }
+
+    /**
+     * The edition from the front matter is shown above the title, escaped.
+     *
+     * @return void
+     */
+    public function test_edition_pill_above_the_title(): void {
+        $this->assertSame('', markdown::edition_pill(''));
+        $expected = '<p class="tool-mdocs-edition"><span class="tool-mdocs-pill">Pro</span></p>';
+        $this->assertSame($expected, markdown::edition_pill('Pro'));
+        $this->assertStringNotContainsString('<b>', markdown::edition_pill('<b>Pro</b>'));
+
+        [$meta] = front_matter::split("---\nedition: Pro\n---\n\n# Title\n");
+        $this->assertSame('Pro', front_matter::edition($meta));
+    }
+
+    /**
+     * Quotes that open with a callout label are styled as that callout; others stay quotes.
+     *
+     * @return void
+     */
+    public function test_callouts_are_recognised_by_their_label(): void {
+        $this->resetAfterTest();
+
+        // Quotes that follow each other directly merge into one, so text separates them.
+        $raw = "# Title\n\n> **Note:** Read this.\n\nText.\n\n> **Important:** Data is deleted.\n\nText.\n\n"
+            . "> **Tip:** Try this.\n\nText.\n\n> Just a quote.\n";
+        $html = markdown::process($raw, 'mod_forum', 'docs/a.md', \context_system::instance())['html'];
+
+        $this->assertStringContainsString('tool-mdocs-callout-note', $html);
+        $this->assertStringContainsString('tool-mdocs-callout-important', $html);
+        $this->assertStringContainsString('tool-mdocs-callout-tip', $html);
+        $this->assertSame(3, substr_count($html, 'class="tool-mdocs-callout '));
+        $this->assertStringContainsString('<strong>Note:</strong>', $html, 'the label stays as text');
     }
 }

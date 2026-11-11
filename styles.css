@@ -118,14 +118,32 @@
 }
 
 /* Wide tables scroll horizontally within the content pane rather than
-   overflowing it. display:block turns the table into its own scroll box. */
-.tool-mdocs-markdown table {
-    display: block;
-    width: max-content;
+   overflowing it. The container scrolls, not the table: display:block on a
+   table removes its table semantics in some screen readers. The container
+   takes the keyboard focus, so it can be scrolled with the arrow keys. */
+.tool-mdocs-markdown .tool-mdocs-table {
     max-width: 100%;
     margin-bottom: 1rem;
     overflow-x: auto;
+}
+
+.tool-mdocs-markdown .tool-mdocs-table:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+}
+
+.tool-mdocs-markdown table {
+    margin-bottom: 0;
     border-collapse: collapse;
+}
+
+.tool-mdocs-markdown table th {
+    text-align: left;
+    vertical-align: bottom;
+}
+
+.tool-mdocs-markdown table td {
+    vertical-align: top;
 }
 
 .tool-mdocs-markdown table th,
@@ -137,6 +155,74 @@
 .tool-mdocs-markdown h1,
 .tool-mdocs-markdown h2 {
     margin-top: 1.5rem;
+}
+
+/* Text for screen readers only. */
+.tool-mdocs-sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Edition pills: above the title for a whole document ("edition: Pro"), and
+   after a bold label for a single setting ("**Mode** (Pro)"). The edition is
+   always text, so the meaning does not depend on the colour. */
+.tool-mdocs-edition {
+    margin-bottom: 0.25rem;
+}
+
+.tool-mdocs-pill {
+    display: inline-block;
+    padding: 0.1em 0.6em;
+    font-size: 0.8em;
+    font-weight: 600;
+    line-height: 1.4;
+    color: #0b4f8a;
+    white-space: nowrap;
+    background-color: #e7f1fa;
+    border: 1px solid #0f6cbf;
+    border-radius: 1rem;
+}
+
+.tool-mdocs-pill-inline {
+    padding: 0 0.5em;
+    font-size: 0.75em;
+    vertical-align: 0.1em;
+}
+
+/* Callouts: "> **Note:**", "> **Important:**" and "> **Tip:**". The label stays
+   in the text; the colour only repeats it. */
+.tool-mdocs-markdown blockquote.tool-mdocs-callout {
+    padding: 0.75rem 1rem;
+    margin: 0 0 1rem;
+    color: inherit;
+    border-left: 4px solid;
+    border-radius: 0.25rem;
+}
+
+.tool-mdocs-markdown blockquote.tool-mdocs-callout > :last-child {
+    margin-bottom: 0;
+}
+
+.tool-mdocs-markdown .tool-mdocs-callout-note {
+    background-color: #e7f1fa;
+    border-left-color: #0f6cbf;
+}
+
+.tool-mdocs-markdown .tool-mdocs-callout-important {
+    background-color: #fbeaea;
+    border-left-color: #ca3120;
+}
+
+.tool-mdocs-markdown .tool-mdocs-callout-tip {
+    background-color: #ebf4ea;
+    border-left-color: #357a32;
 }
 
 /* Markdown editor: toolbar, tabs and preview pane. */

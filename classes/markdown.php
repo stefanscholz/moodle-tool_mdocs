@@ -47,9 +47,10 @@ class markdown {
 
         // The metadata block is instructions to the indexer, not part of the
         // document; rendering it would put "--- audience: teacher ---" on the page.
-        [, $body] = front_matter::split($raw);
+        [$meta, $body] = front_matter::split($raw);
 
         $result = self::process($body, $doc->component, $doc->relpath, $context);
+        $result['html'] = self::edition_pill(front_matter::edition($meta)) . $result['html'];
 
         $cache->set($key, $result);
         return $result;
@@ -203,6 +204,9 @@ class markdown {
         }
 
         $toc = self::add_anchors_and_toc($xpath, $root);
+        self::mark_callouts($xpath, $root);
+        self::mark_edition_labels($xpath, $root);
+        self::wrap_tables($xpath, $root);
         if ($rewritelinks) {
             self::rewrite_links($xpath, $root, $component, $relpath);
             self::rewrite_images($xpath, $root, $component, $relpath);
@@ -246,6 +250,143 @@ class markdown {
         return $toc;
     }
 
+    /** @var string[] Edition names that "**Label** (Edition)" turns into a pill. */
+    const EDITION_LABELS = ['Plus', 'Pro', 'Premium'];
+
+    /** @var string[] Callout labels, as written at the start of a quote, and their style. */
+    const CALLOUTS = ['Note:' => 'note', 'Important:' => 'important', 'Tip:' => 'tip'];
+
+    /**
+     * The pill shown above a document's title for the edition it needs.
+     *
+     * @param string $edition the edition from the front matter, '' for none
+     * @return string HTML, empty when there is no edition
+     */
+    public static function edition_pill(string $edition): string {
+        if ($edition === '') {
+            return '';
+        }
+        return '<p class="tool-mdocs-edition"><span class="tool-mdocs-pill">' . s($edition) . '</span></p>';
+    }
+
+    /**
+     * Style quotes that start with a callout label as callouts.
+     *
+     * "> **Note:** text" is a quote whose first paragraph opens with a bold "Note:".
+     * The label stays in the text, so the meaning never depends on the colour.
+     *
+     * @param \DOMXPath $xpath
+     * @param \DOMElement $root
+     */
+    protected static function mark_callouts(\DOMXPath $xpath, \DOMElement $root): void {
+        foreach ($xpath->query('.//blockquote', $root) as $quote) {
+            if (!$quote instanceof \DOMElement) {
+                continue;
+            }
+            $first = $xpath->query('./*[1]', $quote)->item(0);
+            if (!$first instanceof \DOMElement || $first->nodeName !== 'p') {
+                continue;
+            }
+            $label = null;
+            foreach ($first->childNodes as $child) {
+                if ($child instanceof \DOMText && trim($child->textContent) === '') {
+                    continue;
+                }
+                $label = $child;
+                break;
+            }
+            if (!$label instanceof \DOMElement || $label->nodeName !== 'strong') {
+                continue;
+            }
+            $type = self::CALLOUTS[trim($label->textContent)] ?? null;
+            if ($type === null) {
+                continue;
+            }
+            $class = trim($quote->getAttribute('class') . ' tool-mdocs-callout tool-mdocs-callout-' . $type);
+            $quote->setAttribute('class', $class);
+        }
+    }
+
+    /**
+     * Show "(Pro)" right after a bold label as a small pill.
+     *
+     * Only this exact pattern is changed, "**Mode** (Pro)", so ordinary text in
+     * parentheses is never touched. The parentheses stay in the text for screen
+     * readers and for copying, and are only hidden visually.
+     *
+     * @param \DOMXPath $xpath
+     * @param \DOMElement $root
+     */
+    protected static function mark_edition_labels(\DOMXPath $xpath, \DOMElement $root): void {
+        $names = implode('|', array_map(fn($name) => preg_quote($name, '/'), self::EDITION_LABELS));
+        $pattern = '/^(\s+)\((' . $names . ')\)/';
+        $dom = $root->ownerDocument;
+
+        // Collect first: the loop below changes the tree it would be walking.
+        $labels = [];
+        foreach ($xpath->query('.//strong', $root) as $strong) {
+            $labels[] = $strong;
+        }
+        foreach ($labels as $strong) {
+            $next = $strong->nextSibling;
+            if (!$next instanceof \DOMText || !preg_match($pattern, $next->data, $m)) {
+                continue;
+            }
+            $rest = substr($next->data, strlen($m[0]));
+
+            $pill = $dom->createElement('span');
+            $pill->setAttribute('class', 'tool-mdocs-pill tool-mdocs-pill-inline');
+            $open = $dom->createElement('span', '(');
+            $open->setAttribute('class', 'tool-mdocs-sr');
+            $close = $dom->createElement('span', ')');
+            $close->setAttribute('class', 'tool-mdocs-sr');
+            $pill->appendChild($open);
+            $pill->appendChild($dom->createTextNode($m[2]));
+            $pill->appendChild($close);
+
+            $parent = $next->parentNode;
+            $parent->insertBefore($dom->createTextNode($m[1]), $next);
+            $parent->insertBefore($pill, $next);
+            $next->data = $rest;
+        }
+    }
+
+    /**
+     * Put every table in a scroll container instead of making the table scroll.
+     *
+     * A table with display:block loses its table semantics in some screen
+     * readers. The container scrolls instead; it can take the keyboard focus, so
+     * a wide table can be scrolled without a mouse, and it is named after the
+     * heading above the table.
+     *
+     * @param \DOMXPath $xpath
+     * @param \DOMElement $root
+     */
+    protected static function wrap_tables(\DOMXPath $xpath, \DOMElement $root): void {
+        $tables = [];
+        foreach ($xpath->query('.//table', $root) as $table) {
+            $tables[] = $table;
+        }
+        foreach ($tables as $table) {
+            $parent = $table->parentNode;
+            if ($parent instanceof \DOMElement && str_contains(' ' . $parent->getAttribute('class') . ' ', ' tool-mdocs-table ')) {
+                continue;
+            }
+            $wrapper = $root->ownerDocument->createElement('div');
+            $wrapper->setAttribute('class', 'tool-mdocs-table');
+            $wrapper->setAttribute('tabindex', '0');
+
+            $heading = $xpath->query('preceding::*[self::h1 or self::h2 or self::h3 or self::h4][@id][1]', $table)->item(0);
+            if ($heading instanceof \DOMElement) {
+                $wrapper->setAttribute('role', 'region');
+                $wrapper->setAttribute('aria-labelledby', $heading->getAttribute('id'));
+            }
+
+            $parent->insertBefore($wrapper, $table);
+            $wrapper->appendChild($table);
+        }
+    }
+
     /**
      * Turn links to documents of other components into viewer links, or into plain text.
      *
@@ -269,8 +410,9 @@ class markdown {
             return $raw;
         }
 
-        $parts = preg_split('/(^(?:```|~~~)[^\n]*\n.*?^(?:```|~~~)[ \t]*$|`[^`\n]+`)/ms', $raw, -1,
-            PREG_SPLIT_DELIM_CAPTURE);
+        // Fenced code blocks and code spans; \x60 is the backtick.
+        $code = '/(^(?:\x60{3}|~{3})[^\n]*\n.*?^(?:\x60{3}|~{3})[ \t]*$|\x60[^\x60\n]+\x60)/ms';
+        $parts = preg_split($code, $raw, -1, PREG_SPLIT_DELIM_CAPTURE);
         if ($parts === false) {
             return $raw;
         }
