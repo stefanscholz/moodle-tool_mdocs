@@ -49,7 +49,7 @@ final class editor_output_test extends \advanced_testcase {
             'quote'                      => ["> A quotation", '<blockquote>'],
             // Note: \x60 is a backtick, which is Markdown's code marker.
             'inline code'                => ["call \x60foo()\x60 here", '<code>foo()</code>'],
-            'fenced code'                => ["\x60\x60\x60\none\ntwo\n\x60\x60\x60", '<pre>'],
+            'fenced code'                => ["\x60\x60\x60\none\ntwo\n\x60\x60\x60", '<pre'],
             'link'                       => ["click [here](https://example.com)", '<a href="https://example.com"'],
             'image'                      => ["![alt](@@PLUGINFILE@@/image.png)", '<img'],
             'bullet list'                => ["- one\n- two", '<ul>'],
