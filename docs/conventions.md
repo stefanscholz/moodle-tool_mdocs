@@ -72,6 +72,7 @@ pagetypes:
 exclude: false
 order: 20
 edition: Pro
+requires: videotimeplugin_repository
 ---
 
 # Watching a video
@@ -84,6 +85,7 @@ edition: Pro
 | `exclude` | `true` keeps the document out of contextual help entirely. It is still in the Documentation Center. |
 | `order` | A whole number that sets the document's place among the documents of its plugin, lowest first, in the sidebar and in contextual help. Without it, documents are listed by title. |
 | `edition` | The edition the whole document needs, such as `Pro`. Shown as a pill next to the title, and announced with the title by screen readers. Write it as it is sold. |
+| `requires` | The components the document is about, such as `skilladdon_decay`. Several are allowed. If one of them is not installed, the document is left out: it is not listed, not found by search, not offered as contextual help, and `mdocs:` links to it become plain text. It appears as soon as the component is installed. Use it for documents about a part of a higher edition, together with `edition`; leave it out of documents that only mention such a part. |
 
 Anything else in the block is ignored, and a mistake in it costs you the hint, not
 the document.

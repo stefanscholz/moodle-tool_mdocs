@@ -38,6 +38,7 @@ namespace tool_mdocs;
  *     exclude: false
  *     order: 30
  *     edition: Pro
+ *     requires: skilladdon_decay
  *     ---
  *
  *     # Watching a video
@@ -216,6 +217,24 @@ class front_matter {
         }
         $value = trim($value);
         return \core_text::strlen($value) <= 30 ? $value : '';
+    }
+
+    /**
+     * The components a document needs, so it is only listed where they are installed.
+     *
+     * "edition: Pro" is a label for readers and says nothing a site can check: what
+     * Pro contains differs from product to product. This key names the components
+     * instead, so a guide to a Pro add-on stays out of a site that only has the
+     * free plugin. Written like audience: a list or a comma-separated line.
+     *
+     * @param array $meta the parsed metadata
+     * @return string[] frankenstyle component names, lower-cased, or [] when absent
+     */
+    public static function requires(array $meta): array {
+        return array_values(array_filter(
+            self::values($meta, 'requires'),
+            static fn(string $component) => (bool) preg_match('/^[a-z][a-z0-9]*(_[a-z0-9_]+)?$/', $component)
+        ));
     }
 
     /**

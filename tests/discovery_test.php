@@ -307,4 +307,44 @@ final class discovery_test extends \advanced_testcase {
         $this->assertSame(20, $doc->sortorder);
         $this->assertSame(20, $doc->to_record()->sortorder);
     }
+
+    /**
+     * A document that requires a missing component is left out of the index.
+     *
+     * @return void
+     */
+    public function test_documents_requiring_missing_components_are_skipped(): void {
+        $this->resetAfterTest();
+        set_config('includeall', 1, 'tool_mdocs');
+
+        $dir = make_request_directory();
+        mkdir($dir . '/docs');
+        file_put_contents($dir . '/docs/always.md', "# Always\n\nNo requirements.\n");
+        file_put_contents($dir . '/docs/installed.md', "---\nrequires: tool_mdocs\n---\n\n# Installed\n");
+        file_put_contents($dir . '/docs/missing.md', "---\nrequires:\n  - tool_mdocs\n  - local_doesnotexist\n---\n\n# Missing\n");
+
+        $discovery = new discovery();
+        $paths = array_map(fn($doc) => $doc->relpath, $discovery->scan_component('fixture_sample', 'fixture', $dir));
+        sort($paths);
+
+        $this->assertSame(['docs/always.md', 'docs/installed.md'], $paths);
+    }
+
+    /**
+     * Installed means installed: code alone, or an unknown name, does not count.
+     *
+     * @return void
+     */
+    public function test_requirements_met(): void {
+        $this->resetAfterTest();
+
+        $this->assertTrue(discovery::requirements_met([]));
+        $this->assertTrue(discovery::requirements_met(['tool_mdocs', 'mod_forum', 'core_course']));
+        $this->assertFalse(discovery::requirements_met(['tool_mdocs', 'local_doesnotexist']));
+        $this->assertFalse(discovery::requirements_met(['core_doesnotexist']));
+
+        // Code that is on disk but not installed yet: the upgrade has not run.
+        unset_config('version', 'mod_forum');
+        $this->assertFalse(discovery::requirements_met(['mod_forum']));
+    }
 }

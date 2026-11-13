@@ -213,6 +213,13 @@ class discovery {
         // block is indexed and displayed as if it were prose.
         [$meta, $body] = front_matter::split($raw);
 
+        // A guide to something the site does not have would only promise features
+        // nobody can find. The index is rebuilt whenever plugins change, so the
+        // guide appears as soon as its component is installed.
+        if (!self::requirements_met(front_matter::requires($meta))) {
+            return null;
+        }
+
         return new document(
             $component,
             $plugintype,
@@ -225,6 +232,35 @@ class discovery {
             $this->resolve_audiences($meta, $relpath),
             front_matter::order($meta)
         );
+    }
+
+    /**
+     * Whether every component a document requires is installed.
+     *
+     * Present on disk is not enough: code that is waiting for the upgrade to run
+     * has no pages, settings or capabilities yet.
+     *
+     * @param string[] $components frankenstyle component names
+     * @return bool true when nothing is required or all of it is installed
+     */
+    public static function requirements_met(array $components): bool {
+        foreach ($components as $component) {
+            [$type, $name] = \core_component::normalize_component($component);
+            if ($type === 'core') {
+                // Core subsystems have no version of their own; existing is enough.
+                if (!array_key_exists($name, \core_component::get_core_subsystems())) {
+                    return false;
+                }
+                continue;
+            }
+            if (\core_component::get_component_directory($component) === null) {
+                return false;
+            }
+            if (get_config($component, 'version') === false) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

@@ -154,7 +154,10 @@ class viewer_page implements \renderable, \templatable {
             'componentname' => nav_tree::component_name($doc->component),
             'component'     => $doc->component,
             'ispage'        => false,
-            'sourcelabel'   => get_string('sourcepath', 'tool_mdocs', $doc->component . '/' . $doc->relpath),
+            // Where the file lives only helps the people who can open it on the server.
+            'sourcelabel'   => is_siteadmin()
+                ? get_string('sourcepath', 'tool_mdocs', $doc->component . '/' . $doc->relpath)
+                : '',
         ];
     }
 
