@@ -213,6 +213,7 @@ class markdown {
             self::rewrite_links($xpath, $root, $component, $relpath);
             self::rewrite_images($xpath, $root, $component, $relpath);
         }
+        self::mark_external_links($xpath, $root);
 
         return ['html' => self::inner_html($root), 'toc' => $toc];
     }
@@ -500,6 +501,59 @@ class markdown {
                 $link->setAttribute('href', $url->out(false));
             }
         }
+    }
+
+    /**
+     * Mark links that leave the site, so nobody is taken somewhere else unawares.
+     *
+     * Every link opens in the same tab. A link to another site gets an arrow after
+     * its text and, for screen readers, the words "(external site)". The arrow is
+     * hidden from assistive technology, so the words are announced once.
+     *
+     * @param \DOMXPath $xpath
+     * @param \DOMElement $root
+     */
+    protected static function mark_external_links(\DOMXPath $xpath, \DOMElement $root): void {
+        $dom = $root->ownerDocument;
+        $label = ' (' . get_string('externallink', 'tool_mdocs') . ')';
+        foreach ($xpath->query('.//a[@href]', $root) as $link) {
+            if (!$link instanceof \DOMElement || !self::is_external_url($link->getAttribute('href'))) {
+                continue;
+            }
+            if (str_contains(' ' . $link->getAttribute('class') . ' ', ' tool-mdocs-external ')) {
+                continue;
+            }
+            $link->setAttribute('class', trim($link->getAttribute('class') . ' tool-mdocs-external'));
+
+            $icon = $dom->createElement('span');
+            $icon->setAttribute('class', 'tool-mdocs-external-icon');
+            $icon->setAttribute('aria-hidden', 'true');
+            $link->appendChild($icon);
+
+            $text = $dom->createElement('span');
+            $text->setAttribute('class', 'tool-mdocs-sr');
+            $text->appendChild($dom->createTextNode($label));
+            $link->appendChild($text);
+        }
+    }
+
+    /**
+     * Whether a URL points to another site than this Moodle.
+     *
+     * @param string $href the link target as written
+     * @return bool true for http(s) and protocol-relative links to another host
+     */
+    public static function is_external_url(string $href): bool {
+        global $CFG;
+        if (!preg_match('~^(?:https?:)?//~i', $href)) {
+            return false;
+        }
+        $host = parse_url(str_starts_with($href, '//') ? 'https:' . $href : $href, PHP_URL_HOST);
+        $ownhost = parse_url($CFG->wwwroot, PHP_URL_HOST);
+        if (!is_string($host) || $host === '') {
+            return false;
+        }
+        return \core_text::strtolower($host) !== \core_text::strtolower((string) $ownhost);
     }
 
     /**

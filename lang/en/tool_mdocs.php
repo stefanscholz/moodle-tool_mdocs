@@ -59,6 +59,7 @@ $string['editorwrite'] = 'Write';
 $string['editpage'] = 'Edit page';
 $string['excludenames'] = 'Never include';
 $string['excludenames_desc'] = 'One name per line. A file is skipped when its own name matches (for example <em>install.md</em>), and so is everything inside a folder whose name matches (for example <em>examples</em>). This wins over everything above it: it is how you keep one unwanted file out without having to narrow the rules for all the others.';
+$string['externallink'] = 'external site';
 $string['filterplaceholder'] = 'Filter…';
 $string['generalsettings'] = 'General settings';
 $string['helpdocfailed'] = 'That document could not be loaded.';

@@ -66,7 +66,7 @@ class nav_tree {
             }
 
             $doc = self::doc_entry($record, $activedocid);
-            self::place($groups, $topkey, $record->component, $parent, $doc);
+            self::place($groups, $topkey, $record->component, $parent, $doc, self::section_of($record->relpath ?? ''));
         }
 
         foreach ($pagerecords as $record) {
@@ -102,16 +102,31 @@ class nav_tree {
      * @param string $component the entry's own component
      * @param string|null $parent parent component when $component is a subplugin
      * @param array $entry the doc or page link entry
+     * @param string|null $section the folder the document sits in, see section_of()
      */
     protected static function place(
         array &$groups,
         string $topkey,
         string $component,
         ?string $parent,
-        array $entry
+        array $entry,
+        ?string $section = null
     ): void {
         if ($parent === null) {
-            $groups[$topkey]['docs'][] = $entry;
+            if ($section === null) {
+                $groups[$topkey]['docs'][] = $entry;
+                return;
+            }
+            // Sections keep the order in which they first appear. The records
+            // arrive sorted by order, so that is the position of their first
+            // document, and a plugin orders its sections through front matter.
+            if (!isset($groups[$topkey]['sections'][$section])) {
+                $groups[$topkey]['sections'][$section] = [
+                    'displayname' => self::section_name($section),
+                    'docs'        => [],
+                ];
+            }
+            $groups[$topkey]['sections'][$section]['docs'][] = $entry;
             return;
         }
         if (!isset($groups[$topkey]['subgroups'][$component])) {
@@ -122,6 +137,43 @@ class nav_tree {
             ];
         }
         $groups[$topkey]['subgroups'][$component]['docs'][] = $entry;
+    }
+
+    /**
+     * The section a document belongs to: the folder it sits in, below the top folder.
+     *
+     * "docs/installation-and-setup/installation.md" is in the section
+     * "installation-and-setup". A document directly in docs/, or in the plugin's
+     * root, belongs to no section and is listed above the sections. Only the
+     * folder the file sits in counts, so deeper nesting does not add levels to
+     * the sidebar.
+     *
+     * @param string $relpath path of the document inside its component
+     * @return string|null the folder name, or null for no section
+     */
+    public static function section_of(string $relpath): ?string {
+        $segments = explode('/', trim(str_replace('\\', '/', $relpath), '/'));
+        if (count($segments) < 3) {
+            return null;
+        }
+        return $segments[count($segments) - 2];
+    }
+
+    /**
+     * The heading shown for a section folder.
+     *
+     * Folder names are written for people: "installation-and-setup" becomes
+     * "Installation and setup".
+     *
+     * @param string $folder the folder name
+     * @return string
+     */
+    public static function section_name(string $folder): string {
+        $name = trim(preg_replace('/[\s_-]+/', ' ', $folder));
+        if ($name === '') {
+            return $folder;
+        }
+        return \core_text::strtoupper(\core_text::substr($name, 0, 1)) . \core_text::substr($name, 1);
     }
 
     /**
@@ -137,6 +189,7 @@ class nav_tree {
             'displayname' => $displayname,
             'issite'      => ($topkey === self::SITE_GROUP),
             'docs'        => [],
+            'sections'    => [],
             'subgroups'   => [],
         ];
     }
@@ -222,6 +275,16 @@ class nav_tree {
 
             $doccount = count($group['docs']);
             $hasactive = self::any_active($group['docs']);
+
+            $sections = array_values($group['sections']);
+            foreach ($sections as &$section) {
+                $section['hasactive'] = self::any_active($section['docs']);
+                $doccount += count($section['docs']);
+                $hasactive = $hasactive || $section['hasactive'];
+            }
+            unset($section);
+            $group['sections'] = $sections;
+            $group['hassections'] = !empty($sections);
 
             foreach ($subgroups as &$subgroup) {
                 $subactive = self::any_active($subgroup['docs']);

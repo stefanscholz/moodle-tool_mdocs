@@ -49,6 +49,10 @@ export const init = () => {
                     visible = true;
                 }
             });
+            // A section heading without a matching document would be left standing alone.
+            group.querySelectorAll('[data-region="mdocs-section"]').forEach((section) => {
+                section.hidden = section.querySelector('[data-region="mdocs-doc"]:not([hidden])') === null;
+            });
             group.hidden = !visible;
             if (term !== '' && visible) {
                 group.classList.add('tool-mdocs-open');

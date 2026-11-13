@@ -31,6 +31,12 @@
                 "displayname": "Video Time",
                 "hasactive": true,
                 "docs": [{"title": "Overview", "url": "https://example.com/view.php", "active": true}],
+                "sections": [
+                    {
+                        "displayname": "Installation and setup",
+                        "docs": [{"title": "Installation", "url": "https://example.com/view.php", "active": false}]
+                    }
+                ],
                 "subgroups": [
                     {
                         "displayname": "Analysis",
@@ -60,8 +66,20 @@
                                     <a href="{{url}}" class="{{#active}}font-weight-bold tool-mdocs-active{{/active}}">{{title}}</a>{{#isdraft}} <span class="badge badge-secondary">{{#str}}draftbadge, tool_mdocs{{/str}}</span>{{/isdraft}}
                                 </li>
                             {{/docs}}
+                            {{#sections}}
+                                <li class="tool-mdocs-tree-section" data-region="mdocs-section">
+                                    <span class="tool-mdocs-section-title">{{displayname}}</span>
+                                    <ul class="list-unstyled">
+                                        {{#docs}}
+                                            <li data-region="mdocs-doc">
+                                                <a href="{{url}}" class="{{#active}}font-weight-bold tool-mdocs-active{{/active}}">{{title}}</a>{{#isdraft}} <span class="badge badge-secondary">{{#str}}draftbadge, tool_mdocs{{/str}}</span>{{/isdraft}}
+                                            </li>
+                                        {{/docs}}
+                                    </ul>
+                                </li>
+                            {{/sections}}
                             {{#subgroups}}
-                                <li class="tool-mdocs-tree-subgroup">
+                                <li class="tool-mdocs-tree-subgroup" data-region="mdocs-section">
                                     <span class="tool-mdocs-subgroup-title text-muted">{{displayname}}</span>
                                     <ul class="list-unstyled pl-3">
                                         {{#docs}}

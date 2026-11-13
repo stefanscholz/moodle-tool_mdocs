@@ -106,6 +106,31 @@ When that document is on the site, the link opens it. When it is not, because th
 installed, only the link text is shown, so readers never meet a dead link. Write the text so it
 still makes sense without the link.
 
+## Sections: folders inside docs/
+
+Put documents into folders below `docs/` to give them sections. The sidebar and the Documentation
+Center list the documents of a folder under a heading made from the folder name:
+`docs/installation-and-setup/` is shown as "Installation and setup". Documents directly in `docs/`
+are listed above all sections.
+
+```
+docs/README.md
+docs/introduction/getting-started.md
+docs/installation-and-setup/installation.md
+docs/installation-and-setup/general-settings.md
+docs/reports/users-points-report.md
+```
+
+Sections appear in the order of their first document, so `order` in the front matter orders both the
+documents and the sections. Only the folder a file is in counts; deeper folders do not add levels.
+Do not name a section folder after an audience (`admin`, `teacher`, `manager`, `student`,
+`developer`): such a folder sets the audience instead.
+
+## Links to other sites
+
+Every link opens in the same tab. A link to another site is marked with an arrow after its text, and
+screen readers hear "(external site)". Nothing has to be written for this.
+
 ## Editions, callouts and tables
 
 - **A single setting that needs a higher edition:** write the edition in parentheses right after

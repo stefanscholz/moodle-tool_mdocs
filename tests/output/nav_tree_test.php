@@ -141,4 +141,55 @@ final class nav_tree_test extends \advanced_testcase {
         $this->assertTrue($tree[0]['hassubgroups']);
         $this->assertSame(1, $tree[0]['doccount']);
     }
+
+    /**
+     * Documents in a folder below docs/ are listed under that folder as a section,
+     * in the order their documents come in; documents directly in docs/ come first.
+     *
+     * @return void
+     */
+    public function test_documents_are_grouped_by_their_folder(): void {
+        $this->resetAfterTest();
+
+        $files = [
+            ['About', 'docs/README.md'],
+            ['Getting started', 'docs/introduction/getting-started.md'],
+            ['Installation', 'docs/installation-and-setup/installation.md'],
+            ['Settings', 'docs/installation-and-setup/settings.md'],
+            ['Capabilities', 'docs/reference_pages/capabilities.md'],
+        ];
+        $records = [];
+        foreach ($files as $i => [$title, $relpath]) {
+            $record = $this->record('mod_forum', $title, 'f' . $i);
+            $record->relpath = $relpath;
+            $records[] = $record;
+        }
+
+        $group = $this->by_component(nav_tree::build($records, 'f3'))['mod_forum'];
+
+        $this->assertSame(['About'], array_column($group['docs'], 'title'));
+        $this->assertTrue($group['hassections']);
+        $this->assertSame(
+            ['Introduction', 'Installation and setup', 'Reference pages'],
+            array_column($group['sections'], 'displayname')
+        );
+        $this->assertSame(['Installation', 'Settings'], array_column($group['sections'][1]['docs'], 'title'));
+        $this->assertTrue($group['sections'][1]['hasactive']);
+        $this->assertFalse($group['sections'][0]['hasactive']);
+        $this->assertTrue($group['hasactive']);
+        $this->assertSame(5, $group['doccount']);
+    }
+
+    /**
+     * The section is the folder the file sits in; files in the top folder have none.
+     *
+     * @return void
+     */
+    public function test_section_of(): void {
+        $this->assertNull(nav_tree::section_of('README.md'));
+        $this->assertNull(nav_tree::section_of('docs/README.md'));
+        $this->assertSame('reports', nav_tree::section_of('docs/reports/overview.md'));
+        $this->assertSame('deep', nav_tree::section_of('docs/reports/deep/a.md'));
+        $this->assertSame('Skill decay', nav_tree::section_name('skill-decay'));
+    }
 }

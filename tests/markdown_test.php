@@ -314,4 +314,28 @@ final class markdown_test extends \advanced_testcase {
         $this->assertSame(3, substr_count($html, 'class="tool-mdocs-callout '));
         $this->assertStringContainsString('<strong>Note:</strong>', $html, 'the label stays as text');
     }
+
+    /**
+     * Links to other sites get an arrow and a hidden "(external site)"; links on this site do not.
+     *
+     * @return void
+     */
+    public function test_external_links_are_marked(): void {
+        global $CFG;
+        $this->resetAfterTest();
+
+        $raw = "# Title\n\n[Moodle docs](https://docs.moodle.org/en/Main_page), "
+            . "[own page](" . $CFG->wwwroot . "/my/), [anchor](#title) and [mail](mailto:a@example.com).\n";
+        $html = markdown::process($raw, 'mod_forum', 'docs/a.md', \context_system::instance())['html'];
+
+        $this->assertStringContainsString('class="tool-mdocs-external">Moodle docs'
+            . '<span class="tool-mdocs-external-icon" aria-hidden="true"></span>'
+            . '<span class="tool-mdocs-sr"> (external site)</span></a>', $html);
+        $this->assertSame(1, substr_count($html, 'tool-mdocs-external-icon'));
+        $this->assertStringNotContainsString('target=', $html);
+
+        $this->assertTrue(markdown::is_external_url('//example.com/x'));
+        $this->assertFalse(markdown::is_external_url($CFG->wwwroot . '/admin/'));
+        $this->assertFalse(markdown::is_external_url('view.php?doc=1'));
+    }
 }

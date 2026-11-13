@@ -34,6 +34,12 @@
                 "displayname": "Video Time",
                 "hasdocs": true,
                 "docs": [{"title": "Overview", "url": "https://example.com/view.php"}],
+                "sections": [
+                    {
+                        "displayname": "Installation and setup",
+                        "docs": [{"title": "Installation", "url": "https://example.com/view.php"}]
+                    }
+                ],
                 "subgroups": [
                     {
                         "component": "videotimeplugin_analysis",
@@ -91,6 +97,23 @@
                                     {{/docs}}
                                 </ul>
                             {{/hasdocs}}
+                            {{#sections}}
+                                <div class="tool-mdocs-section mt-2">
+                                    <h4 class="h6 mb-1">{{displayname}}</h4>
+                                    <ul class="list-unstyled mb-0">
+                                        {{#docs}}
+                                            <li class="mb-1">
+                                                <a href="{{url}}">{{title}}</a>
+                                                {{#isdraft}}<span class="badge badge-secondary">{{draftbadge}}</span>{{/isdraft}}
+                                                {{#editurl}}
+                                                    <a href="{{editurl}}" class="small ml-1">{{#str}}edit{{/str}}</a>
+                                                    <a href="{{deleteurl}}" class="small text-danger ml-1">{{#str}}delete{{/str}}</a>
+                                                {{/editurl}}
+                                            </li>
+                                        {{/docs}}
+                                    </ul>
+                                </div>
+                            {{/sections}}
                             {{#subgroups}}
                                 <div class="tool-mdocs-subgroup mt-2">
                                     <h4 class="h6 text-muted mb-1">{{displayname}}</h4>
