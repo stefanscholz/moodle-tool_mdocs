@@ -29,6 +29,8 @@ admin_externalpage_setup('tool_mdocs_index');
 
 $context = context_system::instance();
 require_capability('tool/mdocs:view', $context);
+// Without this the heading is the site name, which says nothing about the page.
+$PAGE->set_heading(get_string('pluginname', 'tool_mdocs'));
 
 $manager = new \tool_mdocs\index_manager();
 $pagemanager = new \tool_mdocs\page_manager();

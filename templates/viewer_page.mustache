@@ -26,6 +26,7 @@
         "indexurl": "https://example.com/admin/tool/mdocs/index.php",
         "contenthtml": "<h1 id=\"overview\">Overview</h1><p>Hello.</p>",
         "sourcelabel": "Source: mod_forum/readme.md",
+        "docslabel": "Forum documentation",
         "tree": [
             {
                 "displayname": "Video Time",
@@ -111,6 +112,7 @@
                 </div>
             {{/ispage}}
             <div class="tool-mdocs-markdown">
+                {{#docslabel}}<p class="tool-mdocs-docslabel text-muted mb-1">{{docslabel}}</p>{{/docslabel}}
                 {{{contenthtml}}}
             </div>
             {{#ispage}}

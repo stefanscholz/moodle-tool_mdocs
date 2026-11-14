@@ -51,12 +51,13 @@ $url = new moodle_url('/admin/tool/mdocs/help.php', [
     'contextid' => $contextid,
 ]);
 
-$doc = \tool_mdocs\contextual::read($source, $sourceid);
+$doc = \tool_mdocs\contextual::read($source, $sourceid, (int) $context->id);
 
 $PAGE->set_url($url);
 $PAGE->set_pagelayout('popup');
 $PAGE->set_title($doc['title']);
-$PAGE->set_heading($doc['title']);
+// The document brings its own title as its only level-one heading.
+$PAGE->set_heading('');
 
 echo $OUTPUT->header();
 echo html_writer::div($doc['html'], 'tool-mdocs-markdown tool-mdocs-help-popout');

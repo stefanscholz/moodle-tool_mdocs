@@ -73,7 +73,7 @@ class get_contextual_doc extends external_api {
         self::validate_context($context);
         require_capability(contextual::CAPABILITY, $context);
 
-        return contextual::read((string) $params['source'], (string) $params['sourceid']);
+        return contextual::read((string) $params['source'], (string) $params['sourceid'], (int) $context->id);
     }
 
     /**

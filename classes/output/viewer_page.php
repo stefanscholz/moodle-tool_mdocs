@@ -152,6 +152,7 @@ class viewer_page implements \renderable, \templatable {
         return [
             'title'         => $doc->title,
             'componentname' => nav_tree::component_name($doc->component),
+            'docslabel'     => self::docs_label($doc->component),
             'component'     => $doc->component,
             'ispage'        => false,
             // Where the file lives only helps the people who can open it on the server.
@@ -159,6 +160,22 @@ class viewer_page implements \renderable, \templatable {
                 ? get_string('sourcepath', 'tool_mdocs', $doc->component . '/' . $doc->relpath)
                 : '',
         ];
+    }
+
+    /**
+     * The line above the title that says whose documentation this is: "Skills documentation".
+     *
+     * It is plain text, not a heading: the document's own title is the page's only
+     * level-one heading.
+     *
+     * @param string $component frankenstyle component, '' for site documentation
+     * @return string
+     */
+    public static function docs_label(string $component): string {
+        if ($component === '') {
+            return get_string('sitedocumentation', 'tool_mdocs');
+        }
+        return get_string('componentdocumentation', 'tool_mdocs', nav_tree::component_name($component));
     }
 
     /**
@@ -181,6 +198,7 @@ class viewer_page implements \renderable, \templatable {
         $data = [
             'title'          => $page->title,
             'componentname'  => $componentname,
+            'docslabel'      => self::docs_label((string) ($page->component ?? '')),
             'ispage'         => true,
             'isdraft'        => empty($page->visible),
             'draftbadge'     => get_string('draftbadge', 'tool_mdocs'),

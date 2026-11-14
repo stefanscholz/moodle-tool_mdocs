@@ -79,9 +79,19 @@ if ($pageid) {
     );
 }
 
+$docslabel = $pageid
+    ? \tool_mdocs\output\viewer_page::docs_label((string) ($userpage->component ?? ''))
+    : \tool_mdocs\output\viewer_page::docs_label($component);
+
 $PAGE->set_url($pageurl);
-$PAGE->set_title($title);
-$PAGE->set_heading($title);
+// The browser tab and screen readers name the article, whose documentation it is, and the site.
+$PAGE->set_title(implode(moodle_page::TITLE_SEPARATOR, [$title, $docslabel]));
+// No page heading: the document's title is the page's only level-one heading.
+$PAGE->set_heading('');
+// This page is not in the admin tree, so tell the navigation which entry it belongs
+// to. Without this there are no breadcrumbs and no active tab.
+navigation_node::override_active_url($indexurl);
+$PAGE->navbar->add($docslabel);
 $PAGE->navbar->add($title, $pageurl);
 
 /** @var \tool_mdocs\output\renderer $output */

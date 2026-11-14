@@ -34,6 +34,7 @@ $string['audience_teacher'] = 'Teacher';
 $string['backtoindex'] = 'All documentation';
 $string['browsedocs'] = 'Browse documentation';
 $string['closehelp'] = 'Close';
+$string['componentdocumentation'] = '{$a} documentation';
 $string['coresubsystem'] = 'Core: {$a}';
 $string['deletepage'] = 'Delete page';
 $string['deletepageconfirm'] = 'Are you sure you want to delete the page "{$a}"? This cannot be undone.';

@@ -338,4 +338,27 @@ final class markdown_test extends \advanced_testcase {
         $this->assertFalse(markdown::is_external_url($CFG->wwwroot . '/admin/'));
         $this->assertFalse(markdown::is_external_url('view.php?doc=1'));
     }
+
+    /**
+     * In the help window, links to documents lead to help.php in the reader's context.
+     *
+     * @return void
+     */
+    public function test_links_are_retargeted_for_the_help_window(): void {
+        $this->resetAfterTest();
+
+        $view = (new \moodle_url('/admin/tool/mdocs/view.php', ['component' => 'mod_forum', 'doc' => 'abc123']))->out(false);
+        $page = (new \moodle_url('/admin/tool/mdocs/view.php', ['pageid' => 7]))->out(false);
+        $html = '<p><a href="' . s($view) . '#setup">Doc</a>, <a href="' . s($page) . '">Page</a>, '
+            . '<a href="https://example.com/">Other</a></p>';
+
+        $result = markdown::retarget_links_for_help($html, 42);
+
+        $this->assertStringContainsString('help.php?source=file&amp;sourceid=abc123&amp;contextid=42#setup"', $result);
+        $this->assertStringContainsString('data-mdocs-source="file" data-mdocs-sourceid="abc123"', $result);
+        $this->assertStringContainsString('help.php?source=page&amp;sourceid=7&amp;contextid=42"', $result);
+        $this->assertStringContainsString('<a href="https://example.com/">Other</a>', $result);
+        $this->assertStringNotContainsString('view.php', $result);
+        $this->assertSame('<p>No links</p>', markdown::retarget_links_for_help('<p>No links</p>', 42));
+    }
 }

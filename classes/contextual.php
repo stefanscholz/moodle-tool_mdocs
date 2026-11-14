@@ -97,10 +97,13 @@ class contextual {
      *
      * @param string $source file for a document inside a plugin, page for an authored one
      * @param string $sourceid the document id, or the authored page's id
+     * @param int $contextid the context of the page the reader is on; when given, links to other
+     *     documents lead to the help window instead of the Documentation Center (see
+     *     markdown::retarget_links_for_help())
      * @return array{title: string, html: string}
      * @throws \moodle_exception when there is no such document
      */
-    public static function read(string $source, string $sourceid): array {
+    public static function read(string $source, string $sourceid, int $contextid = 0): array {
         $syscontext = \context_system::instance();
 
         if ($source === index_manager::SOURCE_PAGE) {
@@ -112,8 +115,9 @@ class contextual {
             }
 
             $rendered = markdown::render_page($page, $syscontext);
+            $html = $contextid ? markdown::retarget_links_for_help($rendered['html'], $contextid) : $rendered['html'];
 
-            return ['title' => $page->title, 'html' => $rendered['html']];
+            return ['title' => $page->title, 'html' => $html];
         }
 
         $doc = (new index_manager())->get_document($sourceid);
@@ -122,8 +126,9 @@ class contextual {
         }
 
         $rendered = markdown::render($doc, $syscontext);
+        $html = $contextid ? markdown::retarget_links_for_help($rendered['html'], $contextid) : $rendered['html'];
 
-        return ['title' => $doc->title, 'html' => $rendered['html']];
+        return ['title' => $doc->title, 'html' => $html];
     }
 
     /**

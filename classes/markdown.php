@@ -538,6 +538,67 @@ class markdown {
     }
 
     /**
+     * Point links to other documents at the help window instead of the Documentation Center.
+     *
+     * Rendered documents link to view.php, which needs tool/mdocs:view at the system level.
+     * A teacher reading the help on a course page does not have it: they hold the
+     * contextual capability in their course. Links in what they read must therefore
+     * lead to help.php, in the context they are reading in, which asks that same
+     * question. The help window recognises these links by their data attributes and
+     * opens the target in place; the pop-out page simply follows them.
+     *
+     * @param string $html rendered document
+     * @param int $contextid the context of the page the reader is on
+     * @return string the document with its links retargeted
+     */
+    public static function retarget_links_for_help(string $html, int $contextid): string {
+        if (trim($html) === '' || stripos($html, 'view.php') === false) {
+            return $html;
+        }
+
+        $dom = new \DOMDocument('1.0', 'UTF-8');
+        $preverrors = libxml_use_internal_errors(true);
+        $wrapped = '<?xml encoding="utf-8" ?><div id="tool-mdocs-root">' . $html . '</div>';
+        $dom->loadHTML($wrapped, LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING);
+        libxml_clear_errors();
+        libxml_use_internal_errors($preverrors);
+        $xpath = new \DOMXPath($dom);
+        $root = $xpath->query('//div[@id="tool-mdocs-root"]')->item(0);
+        if (!$root instanceof \DOMElement) {
+            return $html;
+        }
+
+        $viewpath = (new \moodle_url('/admin/tool/mdocs/view.php'))->get_path();
+        foreach ($xpath->query('.//a[@href]', $root) as $link) {
+            if (!$link instanceof \DOMElement) {
+                continue;
+            }
+            [$href, $fragment] = self::split_fragment($link->getAttribute('href'));
+            $parts = parse_url(html_entity_decode($href));
+            if (($parts['path'] ?? '') !== $viewpath) {
+                continue;
+            }
+            parse_str($parts['query'] ?? '', $query);
+            if (!empty($query['doc'])) {
+                $source = index_manager::SOURCE_FILE;
+                $sourceid = clean_param($query['doc'], PARAM_ALPHANUM);
+            } else if (!empty($query['pageid'])) {
+                $source = index_manager::SOURCE_PAGE;
+                $sourceid = (string) clean_param($query['pageid'], PARAM_INT);
+            } else {
+                continue;
+            }
+            $params = ['source' => $source, 'sourceid' => $sourceid, 'contextid' => $contextid];
+            $url = new \moodle_url('/admin/tool/mdocs/help.php', $params);
+            $link->setAttribute('href', $url->out(false) . ($fragment !== '' ? '#' . $fragment : ''));
+            $link->setAttribute('data-mdocs-source', $source);
+            $link->setAttribute('data-mdocs-sourceid', $sourceid);
+        }
+
+        return self::inner_html($root);
+    }
+
+    /**
      * Whether a URL points to another site than this Moodle.
      *
      * @param string $href the link target as written

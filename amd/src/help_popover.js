@@ -313,6 +313,23 @@ const initWindow = (win, root) => {
             return;
         }
 
+        // A link to another document stays in the window. Leaving for the
+        // Documentation Center would fail for a teacher, and the page they are
+        // working on is the reason the window exists.
+        const doclink = e.target.closest('[data-mdocs-sourceid]');
+        if (doclink && win.contains(doclink)) {
+            e.preventDefault();
+            const hash = doclink.hash ? doclink.hash.slice(1) : '';
+            openDoc(win, root, doclink.dataset.mdocsSource, doclink.dataset.mdocsSourceid).then(() => {
+                const target = hash ? win.querySelector('[id="' + CSS.escape(decodeURIComponent(hash)) + '"]') : null;
+                if (target) {
+                    target.scrollIntoView();
+                }
+                return null;
+            }).catch(() => null);
+            return;
+        }
+
         const popout = e.target.closest('[data-action="popout"]');
         if (!popout) {
             return;
